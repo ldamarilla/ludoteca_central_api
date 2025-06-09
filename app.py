@@ -1,7 +1,11 @@
 from flask import Flask
 from flask_cors import CORS
-from routes.alumnos import alumnos_bp
-from routes.materias import materias_bp
+from routes.admin import admin_bp
+from routes.carrito import carrito_bp
+from routes.pedidos import pedidos_bp
+from routes.productos import productos_bp
+from routes.usuario import usuario_bp
+
 
 app = Flask(__name__)
 CORS(app)
