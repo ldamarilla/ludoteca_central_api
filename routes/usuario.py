@@ -1,4 +1,6 @@
 from flask import Blueprint, jsonify, request
 from db import get_connection
 
-usuarios_bp = Blueprint("usuarios", __name__)
+usuario_bp = Blueprint("usuario", __name__)
+
+@usuario
