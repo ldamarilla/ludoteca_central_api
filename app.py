@@ -7,7 +7,5 @@ CORS(app)
 
 app.register_blueprint(crearUsuario_bp, url_prefix="/crear-usuario")
 
-
-
 if __name__ == "__main__":
-    app.run(port=5000, debug=True)
+    app.run ("127.0.0.1", port = "5000", debug = True)
