@@ -1,6 +1,6 @@
 from flask import Flask
 from flask_cors import CORS
-from routes.crear-usuario import crearUsuario_bp
+from routes.crearUsuario import crearUsuario_bp
 
 app = Flask(__name__)
 CORS(app)

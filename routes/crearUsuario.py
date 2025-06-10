@@ -8,19 +8,15 @@ def agregar_datos_usuario():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
     try:
-    data = request.json
-    if not data:
-        return jsonify({"error": "Se esperaba un JSON con email y contrasenia."}), 400
-
-    email = data.get("email")
-    contrasenia = data.get("contrasenia")
+    email = request.form.get("email")
+    contrasenia = request.form.get("contrasenia")
     #Verificar que ambos campos tengas valores ingresados
     if not email or not contrasenia:
         return jsonify({"error": "Email y contrasenia son campos obligatorios."}), 400
 
 
     #Verificar si el email ya existe
-    cursor.execute("SELECT ID_USUARIO FROM USUARIO WHERE EMAIL = %s", (email,))
+    cursor.execute("SELECT ID_USUARIO FROM USUARIO WHERE EMAIL = %s", (email))
     if cursor.fetchone():
         return jsonify({"error": "Este email ya está registrado."}), 409 # Conflicto
 
