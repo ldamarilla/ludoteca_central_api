@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Cuenta</title>
+    <link rel="stylesheet" href="{{url_for('static', filename='css/mi-cuenta.css')}}">
+</head>
+<body>
+      <div class="container">
+          <div>
+            <h1>Perfil (nombre)</h1>
+              <div class="profile-pic"></div>
+              <label class="upload-btn" for="foto">Subir foto de perfil</label>
+              <input type="file" id="foto" name="foto" accept="image/*" hidden>
+          </div>
+
+  <form method="POST" enctype="multipart/form-data"></form>
+          <div class="personal-info">
+            
+              <div class="row-name-apellido">
+
+                <div>
+                  <label>Nombre</label>
+                  <input type="text" name="nombre" value="{{ micuenta.nombre }}">
+                </div>
+                <div>
+                  <label>Apellido</label>
+                  <input type="text" name="apellido" value="{{ micuenta.apellido }}">
+                </div>
+              </div>
+
+              <label>Dirección de correo</label>
+              <input type="email" name="email" value="{{ micuenta.email }}">
+
+              <label>DNI</label>
+              <input type="text" name="dni" value="{{ micuenta.dni }}">
+
+              <label>Dirección</label>
+              <input type="text" name="direccion" value="{{ micuenta.direccion }}">
+
+            <div class="row">
+              
+                <div>
+                    <label>Timbre</label>
+                    <input type="text" name="timbre" value="{{ micuenta.timbre }}" class="small-input">
+                </div>
+                <div>
+                    <label>Piso</label>
+                    <input type="text" name="piso" value="{{ micuenta.piso }}" class="small-input">
+                </div>
+            </div>
+        </div>
+    </div>
+
+      <div class="actions">
+          <button type="button" onclick="alert('Instrucciones para recuperar la contraseña han sido enviadas a tu correo.')">Olvidé mi contraseña</button>
+          <button type="button">Cambiar contraseña</button>
+      </div>
+
+      <div class="inf-bottom">
+          <button type="submit" class="save-btn">Guardar cambios</button>
+        
+          <button type="submit" class="delete-btn" onclick="alert('Tu cuenta se ha eliminado con exito.')">Eliminar cuenta</button>
+          
+        </div>  
+      </div>
+  </form>
+  
+<script src="{{ url_for('static', filename='js/foto.js') }}"></script>
+  
+</body>
+</html>

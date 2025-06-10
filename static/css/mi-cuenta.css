@@ -1,0 +1,211 @@
+/* ------------ Configuración general ------------ */
+
+main{ 
+
+    font-family: Arial, sans-serif; 
+    margin:0;
+    width: 1800px;
+    height: 560px;
+    display: flex;
+    justify-content: center;
+
+}
+/* ------------ Encabezado ------------ */
+
+h1 { 
+
+    font-size: 32px; 
+    font-weight: bold; 
+    text-align: center;
+
+}
+/* ------------ Contenedor principal ------------ */
+
+.container { 
+
+    display: flex; 
+    flex-wrap: wrap; 
+    gap: 20px; 
+
+}
+/* ------------ Imagen de perfil ------------ */
+
+.profile-pic { 
+
+    width: 200px; 
+    height: 200px; 
+    background-color: #ccc; 
+    border-radius: 20px;
+    background-size:cover;
+    background-position: center;
+
+}
+
+/* ------------ Botón de subir foto  ------------ */
+
+.upload-btn { 
+
+    display: inline-block;
+    margin-top: 10px; 
+    padding: 10px 20px; 
+    background-color: rgb(110, 108, 108); 
+    color: white; 
+    border: none; 
+    cursor: pointer; 
+    border-radius: 10px; 
+
+}
+
+.upload-btn:hover { 
+
+    background-color: rgb(66, 65, 65);
+    transform: scale(0.98) 
+
+}
+
+/* ------------ Información personal ------------ */
+
+.personal-info { 
+
+    flex: 1; 
+    min-width: 300px; 
+
+}
+.personal-info label { 
+
+    display: block; 
+    margin-top: 10px; 
+
+}
+
+/* ------------ Configuración campos de entrada ------------ */
+
+.personal-info input {
+
+    width: 200px; 
+    padding: 8px;
+    margin-top: 5px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+
+}
+/* ------------ Configuración de email, dni y dirección (campos con ancho mayor) ------------ */
+
+.personal-info input[type="email"],
+.personal-info input[name="dni"],
+.personal-info input[name="direccion"] {
+
+    width: 300px; 
+    max-width: 500px;
+
+}
+
+/* ------------ FIlas para agrupar campos ------------ */
+
+.row { 
+
+    display: flex; 
+    gap: 10px; 
+
+}
+
+.row-name-apellido { 
+
+    display: flex; 
+    gap: 20px; 
+
+}
+
+.row-name-apellido div {
+
+    flex: 1;
+    min-width: 150px;
+
+}
+
+/* ------------ Timbre y piso: modificación individual de campo ------------ */
+
+input.small-input {
+
+    width: 50px;
+
+}
+/* ------------ Botones de acción ------------ */
+
+.actions { 
+
+    margin-top: 30px; 
+    display: flex; 
+    gap: 10px; 
+    justify-content: center; 
+
+}
+
+.actions button { 
+
+    padding: 10px 20px; 
+    background-color: black; 
+    color: white; 
+    border: none; 
+    cursor: pointer; 
+    border-radius: 10px; 
+
+}
+
+.actions button:hover { 
+
+    background-color: rgb(107, 104, 104); 
+    transform: scale(0.98); 
+
+}
+
+
+
+/* ------------ Botones de la parte inferior ------------ */
+
+.inf-bottom{
+
+    margin-top:30px ;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+
+}
+/*guardar cambios*/
+.save-btn { 
+
+    padding: 10px 20px; 
+    background-color: rgb(182, 224, 182); 
+    color: rgb(0, 0, 0); 
+    border: none; 
+    cursor: pointer; 
+    border-radius: 10px; 
+    justify-content: center;
+
+}
+
+.save-btn:hover { 
+
+    background-color: rgb(120, 197, 120); 
+    transform: scale(0.98); 
+
+}
+/*eliminar cuenta*/
+.delete-btn { 
+
+    padding: 10px 20px; 
+    background-color: darkred; 
+    color: white; 
+    border: none; 
+    cursor: pointer; 
+    border-radius: 10px; 
+    justify-content: center;
+
+}
+
+.delete-btn:hover { 
+
+    background-color: rgb(196, 18, 18); 
+    transform: scale(0.98); 
+
+}
