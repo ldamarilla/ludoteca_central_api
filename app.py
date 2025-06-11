@@ -16,6 +16,11 @@ def productos():
         return "add_producto"
     return None
 
+
+@app.route('/api/productos/<id>', methods=['GET'])
+def get_product(id):
+    return get_producto(id)
+
 def get_productos():
     if request.method == 'GET':
         query = """SELECT * FROM PRODUCTOS;"""
@@ -38,6 +43,26 @@ def get_productos():
                 products.append(product)
 
         return jsonify(products)
+    return None
+
+
+def get_producto(id):
+    query = f"""SELECT * FROM PRODUCTOS p WHERE p.id = '{id}';"""
+
+    product = dict()
+
+    with engine.connect() as conn:
+        result = conn.execute(text(query))
+
+        for row in result:
+            product['id'] = row.ID
+            product['nombre'] = row.NOMBRE
+            product['precio'] = row.PRECIO
+            product['stock'] = row.STOCK
+            product['descripcion'] = row.DESCRIPCION
+            product['id_categoria'] = row.CATEGORIA_ID
+
+    return jsonify(product)
 
 if __name__ == '__main__':
     app.run(port=5050, debug=True)
