@@ -7,5 +7,37 @@ app = Flask(__name__)
 
 engine = create_engine(DATABASE_URI)
 
+@app.route('/api/productos', methods=['GET', 'POST'])
+def productos():
+    if request.method == 'GET':
+        return get_productos()
+
+    if request.method == 'POST':
+        return "add_producto"
+    return None
+
+def get_productos():
+    if request.method == 'GET':
+        query = """SELECT * FROM PRODUCTOS;"""
+
+        products = list()
+
+        with engine.connect() as conn:
+            result = conn.execute(text(query))
+
+            for row in result:
+                product = dict()
+
+                product['id'] = row.ID
+                product['nombre'] = row.NOMBRE
+                product['precio'] = row.PRECIO
+                product['stock'] = row.STOCK
+                product['descripcion'] = row.DESCRIPCION
+                product['id_categoria'] = row.CATEGORIA_ID
+
+                products.append(product)
+
+        return jsonify(products)
+
 if __name__ == '__main__':
     app.run(port=5050, debug=True)
