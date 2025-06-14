@@ -3,7 +3,7 @@ from flask import Flask, jsonify, request, Blueprint, render_template
 from sqlalchemy import create_engine, text
 import re
 
-crearUsuario_bp = Blueprint("crearUsuario", __name__)
+crear_usuario_bp = Blueprint("crear_usuario", __name__)
 
 engine = create_engine(DATABASE_URI)
 
