@@ -1,43 +1,45 @@
-from flask import Blueprint, jsonify, request
-from db import get_connection
+from base64 import b64decode, b64encode
+from flask import Flask, jsonify, request, Blueprint, render_template
+from sqlalchemy import create_engine, text
+import re
 
 crearUsuario_bp = Blueprint("crearUsuario", __name__)
 
-@crearUsuario_bp.route("/", methods=["POST"])
+engine = create_engine(DATABASE_URI)
+
+@crearUsuario_bp.route("/", methods=["GET", "POST"])
 def agregar_datos_usuario():
-    conn = get_connection()
-    cursor = conn.cursor(dictionary=True)
-    try:
-        email = request.form.get("email")
-        contrasenia = request.form.get("contrasenia")
-        #Verificar que ambos campos tengas valores ingresados
-        if not email or not contrasenia:
-            return jsonify({"error": "Email y contrasenia son campos obligatorios."}), 400
+    if request.method == "POST":
+        try:
+            email = request.form.get("email")
+            contrasenia = request.form.get("contrasenia")
 
 
-        #Verificar si el email ya existe
-        cursor.execute("SELECT ID_USUARIO FROM USUARIO WHERE EMAIL = %s", (email))
-        if cursor.fetchone():
-            return jsonify({"error": "Este email ya está registrado."}), 409 # Conflicto
+            #Verificar si el email ya existe
+            query = text("SELECT ID_USUARIO FROM USUARIO WHERE EMAIL = :email")
+            params = {"email": email}
 
-        cursor.execute("""
-                    INSERT INTO USUARIO (EMAIL, CONTRASENIA)
-                    VALUES (%s, %s)
-                    """, (email, contrasenia)) # Usar hashed_contrasenia aquí
+            with engine.connect() as conn:
+                result = conn.execute(query, params)
 
-        conn.commit()
-        return jsonify({"mensaje": "Usuario registrado exitosamente"}), 201
+            if result.fetchone():
+                return render_template("Email_usado.html"), 409 # Conflicto
 
-    except mysql.connector.Error as err:
-            # Captura errores específicos de MySQL
-            print(f"Error de base de datos: {err}")
-            return jsonify({"error": "Error al registrar el usuario en la base de datos."}), 500
-    except Exception as e:
-            # Captura cualquier otro error inesperado
-            print(f"Error inesperado: {e}")
-            return jsonify({"error": "Ocurrió un error inesperado."}), 500
-    finally:
-            cursor.close()
-            conn.close()
+            # Validar formato de email simple
+            if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+                return render_template("Formulario_invalido.html"), 400
 
+            #Crear usuario
+            query = text("INSERT INTO USUARIO (EMAIL, CONTRASENIA) VALUES (:email, :contrasenia)")
+            params = {"email": email, "contrasenia": contrasenia}
+
+            with engine.begin() as conn:
+                conn.execute(query, params)
+
+            return render_template('Usuario_creado.html'), 201
+
+        except Exception as e:
+                # Captura cualquier error inesperado
+                print(f"Error inesperado: {e}")
+                return render_template('Error_500.html'), 500
 
