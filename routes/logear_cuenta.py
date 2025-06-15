@@ -1,5 +1,5 @@
 from base64 import b64decode, b64encode
-from flask import Flask, jsonify, request, Blueprint, render_template
+from flask import Flask, jsonify, request, Blueprint, render_template, url_for
 from sqlalchemy import create_engine, text
 import re
 
@@ -14,6 +14,9 @@ def iniciarSesionAdmin():
             email = request.form.get("email")
             contrasenia = request.form.get("contrasenia")
 
+            if not email or not contrasenia:
+            return render_template("error.html"), 400
+
             # Verificar si existe un usuario con ese email y contraseña
             query1 = text("""
                 SELECT ID_ADMIN, NOMBRE_ADMIN FROM ADMIN
@@ -22,12 +25,12 @@ def iniciarSesionAdmin():
             params = {"email": email, "contrasenia": contrasenia}
 
             with engine.connect() as conn:
-                result = conn.execute(query1, params).fetchone()
+                admin = conn.execute(query1, params).fetchone()
 
-            if result:
-
+            if admin:
                 # Login exitoso
-                return redirect("vista-admin.html", nombre=result["NOMBRE"]), 200
+                session["admin_id"] = admin["ID_ADMIN"]
+                return render_template("vista-admin.html", nombre=admin["NOMBRE"]), 200
             else:
                 # Email o contraseña incorrectos
                 return render_template("error.html"), 401
@@ -42,6 +45,9 @@ def iniciarSesionUsuario():
             email = request.form.get("email")
             contrasenia = request.form.get("contrasenia")
 
+            if not email or not contrasenia:
+            return render_template("error.html"), 400
+
             # Verificar si existe un usuario con ese email y contraseña
             query1 = text("""
                 SELECT ID_USUARIO FROM USUARIO
@@ -50,11 +56,12 @@ def iniciarSesionUsuario():
             params = {"email": email, "contrasenia": contrasenia}
 
             with engine.connect() as conn:
-                result = conn.execute(query1, params).fetchone()
+                usuario = conn.execute(query1, params).fetchone()
 
-            if result:
+            if usuario:
                 # Login exitoso
-                return redirect("inicio-sesion-ingresada.html"), 200
+                session["usuario_id"] = usuario["ID_USUARIO"]
+                return redirect(url_for("sesion-iniciada"))
             else:
                 # Email o contraseña incorrectos
                 return render_template("error.html"), 401
