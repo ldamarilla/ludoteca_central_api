@@ -8,9 +8,20 @@ vista_admin_1_bp = Blueprint("crear_usuario", __name__)
 engine = create_engine(DATABASE_URI)
 
 @vista_admin_1_bp.route("/", methods=["GET"])
-def mostrar_nombre():
-    if request.method == "GET""
-        try:
+def mostrar_nombreadmin():
+    if request.method == "GET":
+         try:
+            # Consulta a la base de datos
+            query = text("SELECT ID_ADMIN FROM ADMIN WHERE EMAIL_ADMIN = ':email_admin'")
+            with engine.connect() as connection:
+                result = connection.execute(query).fetchone()
+
+            if result:
+                return jsonify({"mensaje": f"Bienvenido, {result[0]}!"}), 200
+            else:
+                return jsonify({"error": "No autorizado"}), 403
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
             
 
 
