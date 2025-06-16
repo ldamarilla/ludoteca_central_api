@@ -21,6 +21,10 @@ def productos():
 def get_product(id):
     return db.get_producto(id)
 
+@app.route('/api/productos/<id>', methods=['PATCH'])
+def update_stock_producto(id):
+    return db.update_stock_producto(id)
+
 # CATEGORIAS
 
 @app.route('/api/categorias', methods=['GET', 'POST'])
@@ -43,4 +47,4 @@ def get_productos_by_categoria(id):
 
 # SERVER
 if __name__ == '__main__':
-    app.run(port=5050, debug=True)
+    app.run(port=5090, debug=True)
