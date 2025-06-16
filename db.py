@@ -1,8 +1,7 @@
 from flask import Flask, jsonify, request
 from sqlalchemy import text, create_engine
-from sqlalchemy.exc import SQLAlchemyError
+from datetime import datetime
 from config import DATABASE_URI
-
 engine = create_engine(DATABASE_URI)
 
 def pull_data_db(query):
@@ -17,6 +16,7 @@ def push_data_db(query, data = None):
         )
         conn.commit()
 
+# PRODUCTOS
 
 def get_productos():
     query = "SELECT * FROM PRODUCTOS;"
@@ -119,6 +119,8 @@ def update_stock_producto(id):
         return jsonify({'error': 'Error inesperado', 'detalle': str(e)}), 500
 
 
+#CATEGORIAS
+
 def get_categorias():
     query = "SELECT * FROM CATEGORIAS;"
     categorias = list()
@@ -156,3 +158,48 @@ def add_categoria():
 
     except Exception as e:
         return jsonify({'error': 'Error inesperado', 'detalle': str(e)}), 500
+
+#CARRITO
+
+def add_producto_a_carrito():
+    data = request.get_json()
+    validation_producto_query = f"""SELECT ID FROM PRODUCTOS p WHERE id ='{data['producto_id']}';"""
+    validation_producto_result = pull_data_db(validation_producto_query).first()
+
+    if not validation_producto_result:
+        return jsonify({'error': 'Producto no hallado'}), 404
+
+    compra_en_progreso_query = "SELECT * FROM COMPRAS c WHERE FINALIZADA = false;"
+    compra_en_progreso_result = pull_data_db(compra_en_progreso_query).first()
+
+    if not compra_en_progreso_result:
+       add_carrito_query = "INSERT INTO COMPRAS (FECHA, USUARIO_ID, FINALIZADA) VALUES (:fecha, :usuario_id, :finalizada);"
+       compra_params = {
+           "fecha": datetime.now(),
+           "usuario_id": get_usuario_logueado()["ID"],
+           "finalizada": False
+       }
+       push_data_db(add_carrito_query, compra_params)
+
+    compra_en_progreso_result = pull_data_db(compra_en_progreso_query).first()
+    add_producto_query = "INSERT INTO COMPRAS_PRODUCTOS (COMPRA_ID, PRODUCTO_ID, CANTIDAD) VALUES (:compra_id, :producto_id, :cantidad);"
+    prod_params = {
+        "compra_id": compra_en_progreso_result.ID,
+        "producto_id": data["producto_id"],
+        "cantidad": 1
+    }
+
+    try:
+        push_data_db(add_producto_query, prod_params)
+        return jsonify({'message': 'Se agrego el producto al carrito correctamente'}), 201
+
+    except Exception as e:
+        return jsonify({'error': 'Error inesperado', 'detalle': str(e)}), 500
+
+def get_usuario_logueado(): #mock, está harcodeado ahora
+    usuario =  {
+        "ID": 1
+    }
+    return jsonify(usuario)
+
+

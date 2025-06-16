@@ -44,7 +44,15 @@ def get_categoria(id):
 def get_productos_by_categoria(id):
     return db.get_productos_by_categoria(id)
 
+@app.route('/api/carrito', methods=['GET', 'POST'])
+def carrito():
+    if request.method == 'GET':
+        return "HOLA"
+
+    if request.method == 'POST':
+        return db.add_producto_a_carrito()
+    return None
 
 # SERVER
 if __name__ == '__main__':
-    app.run(port=5090, debug=True)
+    app.run(port=5070, debug=True)
