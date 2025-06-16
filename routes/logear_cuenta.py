@@ -1,6 +1,7 @@
 from base64 import b64decode, b64encode
 from flask import Flask, jsonify, request, Blueprint, render_template, url_for
 from sqlalchemy import create_engine, text
+from config import DATABASE_URI
 import re
 
 loguear_cuenta_bp = Blueprint("loguear_cuenta", __name__)
@@ -15,7 +16,7 @@ def iniciarSesionAdmin():
             contrasenia = request.form.get("contrasenia")
 
             if not email or not contrasenia:
-            return render_template("error.html"), 400
+                return render_template("error.html"), 400
 
             # Verificar si existe un usuario con ese email y contraseña
             query1 = text("""
@@ -46,7 +47,7 @@ def iniciarSesionUsuario():
             contrasenia = request.form.get("contrasenia")
 
             if not email or not contrasenia:
-            return render_template("error.html"), 400
+                return render_template("error.html"), 400
 
             # Verificar si existe un usuario con ese email y contraseña
             query1 = text("""

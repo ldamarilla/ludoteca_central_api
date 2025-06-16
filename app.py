@@ -9,7 +9,7 @@ from routes.logear_cuenta import loguear_cuenta_bp
 app = Flask(__name__)
 
 app.register_blueprint(crear_usuario_bp, url_prefix="/crear_usuario")
-app.register_blueprint(admin_bp, url_prefix="/vista_administrador_1")
+app.register_blueprint(vista_admin_1_bp, url_prefix="/vista_administrador_1")
 app.register_blueprint(loguear_cuenta_bp, url_prefix="/inicio-sesion")
 
 if __name__ == '__main__':

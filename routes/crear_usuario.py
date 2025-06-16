@@ -1,13 +1,14 @@
 from base64 import b64decode, b64encode
 from flask import Flask, jsonify, request, Blueprint, render_template
 from sqlalchemy import create_engine, text
+from config import DATABASE_URI
 import re
 
 crear_usuario_bp = Blueprint("crear_usuario", __name__)
 
 engine = create_engine(DATABASE_URI)
 
-@crearUsuario_bp.route("/", methods=["GET", "POST"])
+@crear_usuario_bp.route("/", methods=["GET", "POST"])
 def agregar_datos_usuario():
     if request.method == "POST":
         try:
