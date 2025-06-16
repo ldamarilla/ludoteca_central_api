@@ -196,6 +196,31 @@ def add_producto_a_carrito():
     except Exception as e:
         return jsonify({'error': 'Error inesperado', 'detalle': str(e)}), 500
 
+def get_carrito():
+    compra_en_progreso_query = f"""SELECT * FROM COMPRAS c 
+                                LEFT JOIN COMPRAS_PRODUCTOS cp on cp.COMPRA_ID = c.ID
+                                WHERE c.FINALIZADA = false;"""
+    compra_en_progreso_results = pull_data_db(compra_en_progreso_query).fetchall()
+
+    if not compra_en_progreso_results[0]:
+        return jsonify({'error': 'Carrito no creado'}), 404
+
+    compra = dict()
+
+    compra["id"] = compra_en_progreso_results[0].ID
+    compra["fecha"] = compra_en_progreso_results[0].FECHA
+    compra["usuario_id"] = compra_en_progreso_results[0].USUARIO_ID
+
+    compra["compra_productos"] = list()
+
+    for compra_prod in compra_en_progreso_results:
+        compra_producto = dict()
+        compra_producto["producto_id"] = compra_prod.PRODUCTO_ID
+        compra_producto["cantidad"] = compra_prod.CANTIDAD
+        compra["compra_productos"].append(compra_producto)
+
+    return jsonify(compra)
+
 def get_usuario_logueado(): #mock, está harcodeado ahora
     usuario =  {
         "ID": 1
