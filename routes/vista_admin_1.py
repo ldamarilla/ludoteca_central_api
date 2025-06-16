@@ -16,11 +16,7 @@ def mostrar_nombreadmin():
             query = text("SELECT ID_ADMIN FROM ADMIN WHERE EMAIL_ADMIN = ':email_admin'")
             with engine.connect() as connection:
                 result = connection.execute(query).fetchone()
-
-            if result:
-                return jsonify({"mensaje": f"Bienvenido, {result[0]}!"}), 200
-            else:
-                return jsonify({"error": "No autorizado"}), 403
+                
         except Exception as e:
             return jsonify({"error": str(e)}), 500
             
