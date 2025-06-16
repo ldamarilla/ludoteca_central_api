@@ -36,5 +36,11 @@ def categorias():
 def get_categoria(id):
     return db.get_categoria(id)
 
+@app.route('/api/categorias/<id>/productos', methods=['GET'])
+def get_productos_by_categoria(id):
+    return db.get_productos_by_categoria(id)
+
+
+# SERVER
 if __name__ == '__main__':
     app.run(port=5050, debug=True)
