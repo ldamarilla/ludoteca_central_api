@@ -24,11 +24,11 @@ def agregar_datos_usuario():
                 result = conn.execute(query, params)
 
             if result.fetchone():
-                return render_template("Email_usado.html"), 409 # Conflicto
+                return render_template("error.html"), 409 # Conflicto
 
             # Validar formato de email simple
             if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
-                return render_template("Formulario_invalido.html"), 400
+                return render_template("error.html"), 400
 
             #Crear usuario
             query = text("INSERT INTO USUARIO (EMAIL, CONTRASENIA) VALUES (:email, :contrasenia)")
