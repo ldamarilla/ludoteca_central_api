@@ -53,7 +53,7 @@ def get_producto(id):
     return jsonify(product), 200
 
 def get_productos_by_categoria(id):
-    validation_categoria_query =  f"""SELECT ID FROM CATEGORIAS p WHERE id ='{id}';"""
+    validation_categoria_query =  f"""SELECT ID FROM CATEGORIAS p WHERE ID ='{id}';"""
     validation_categoria_result = pull_data_db(validation_categoria_query).first()
 
     if not validation_categoria_result:
@@ -100,6 +100,24 @@ def add_producto():
 
     except Exception as e:
         return jsonify({'error': 'Error inesperado', 'detalle': str(e)}), 500
+
+def update_stock_producto(id):
+    data = request.get_json()
+    validation_producto_query = f"""SELECT ID FROM PRODUCTOS p WHERE ID ='{id}';"""
+    validation_producto_result = pull_data_db(validation_producto_query).first()
+
+    if not validation_producto_result:
+        return jsonify({'error': 'Producto no hallado'}), 404
+
+    query = f"""UPDATE PRODUCTOS SET stock='{data['stock']}' WHERE ID ='{id}';"""
+
+    try:
+        push_data_db(query)
+        return jsonify({'message': 'Actualización de stock ejecutada correctamente'}), 200
+
+    except Exception as e:
+        return jsonify({'error': 'Error inesperado', 'detalle': str(e)}), 500
+
 
 def get_categorias():
     query = "SELECT * FROM CATEGORIAS;"
