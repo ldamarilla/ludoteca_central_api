@@ -47,7 +47,7 @@ def get_productos_by_categoria(id):
 @app.route('/api/carrito', methods=['GET', 'POST'])
 def carrito():
     if request.method == 'GET':
-        return "HOLA"
+        return db.get_carrito()
 
     if request.method == 'POST':
         return db.add_producto_a_carrito()
