@@ -60,6 +60,9 @@ def carrito():
     if request.method == 'PATCH':
         return db.update_cantidad_producto_carrito()
 
+    if request.method == 'DELETE':
+        return db.delete_carrito_producto()
+
     return None
 
 # SERVER
