@@ -17,13 +17,18 @@ def productos():
         return db.add_producto()
     return None
 
-@app.route('/api/productos/<id>', methods=['GET'])
-def get_product(id):
-    return db.get_producto(id)
+@app.route('/api/productos/<id>', methods=['GET', 'PATCH', 'DELETE'])
+def product(id):
+    if request.method == 'GET':
+        return db.get_producto(id)
 
-@app.route('/api/productos/<id>', methods=['PATCH'])
-def update_stock_producto(id):
-    return db.update_stock_producto(id)
+    if request.method == 'PATCH':
+        data = request.get_json()
+        return db.update_stock_producto(id, data['stock'])
+
+    if request.method == 'DELETE':
+        return db.delete_producto(id)
+    return None
 
 # CATEGORIAS
 
@@ -44,7 +49,7 @@ def get_categoria(id):
 def get_productos_by_categoria(id):
     return db.get_productos_by_categoria(id)
 
-@app.route('/api/carrito', methods=['GET', 'POST'])
+@app.route('/api/carrito', methods=['GET', 'POST', 'PATCH', 'DELETE'])
 def carrito():
     if request.method == 'GET':
         return db.get_carrito()
