@@ -1,6 +1,6 @@
 from base64 import b64decode, b64encode
 from flask import Flask, jsonify, request
-import admin,db
+import admin,usuario,db
 
 from config import DATABASE_URI
 
@@ -48,6 +48,20 @@ def get_admins():
 def get_admin(id):
     return admin.get_admin(id)
 
+# CARGAR USUARIO
+
+@app.route('/api/usuario', methods=['GET', 'POST'])
+def usuarios():
+    if request.method == 'GET':
+        return usuario.get_usuarios()
+
+    if request.method == 'POST':
+        return usuario.add_usuario()
+    return None
+
+@app.route('/api/usuario/<id>', methods=['GET'])
+def mostrar_usuario(id):
+    return usuario.get_usuario(id)
 
 
 if __name__ == '__main__':
