@@ -56,6 +56,10 @@ def carrito():
 
     if request.method == 'POST':
         return db.add_producto_a_carrito()
+
+    if request.method == 'PATCH':
+        return db.update_cantidad_producto_carrito()
+
     return None
 
 # SERVER
