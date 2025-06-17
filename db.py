@@ -261,4 +261,29 @@ def get_usuario_logueado(): #mock, está harcodeado ahora
     }
     return usuario
 
+def delete_carrito_producto():
+    data = request.get_json()
+    validation_producto_result = (pull_data_db(f"""SELECT * FROM PRODUCTOS p WHERE id ='{data['producto_id']}';""")
+                                  .first())
+
+    if not validation_producto_result:
+        return jsonify({'error': 'Producto inexistente'}), 404
+
+    validation_compra_producto_query = f"""SELECT cp.ID AS ID FROM COMPRAS_PRODUCTOS cp
+                                    JOIN COMPRAS c ON c.id=cp.COMPRA_ID
+                                    WHERE c.FINALIZADA=false AND cp.PRODUCTO_ID='{data["producto_id"]}';"""
+    validation_compra_producto_result = pull_data_db(validation_compra_producto_query).first()
+
+    if not validation_compra_producto_result:
+        return jsonify({'error': 'Producto a eliminar no hallado en el carrito'}), 404
+
+    query = f"""DELETE FROM COMPRAS_PRODUCTOS WHERE PRODUCTO_ID='{data["producto_id"]}';"""
+
+    try:
+        push_data_db(query)
+        return jsonify({'message': 'Eliminación de producto en carrito ejecutada correctamente'}), 200
+
+    except Exception as e:
+        return jsonify({'error': 'Error inesperado', 'detalle': str(e)}), 500
+
 
