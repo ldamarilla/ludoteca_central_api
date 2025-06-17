@@ -77,6 +77,23 @@ def login ():
     return None
 
 
+@app.route('/api/protected', methods=['GET'])
+def protected_route():
+    auth_header = request.headers.get("Authorization")
+    if not auth_header:
+        return jsonify({'error': 'Token no proporcionado'}), 401
+
+    try:
+        token = auth_header.split(" ")[1]  # Asumiendo formato "Bearer <token>"
+    except IndexError:
+        return jsonify({'error': 'Formato de token inválido'}), 401
+
+    user_data = validar_token(token)
+    if not user_data:
+        return jsonify({'error': 'Token inválido o expirado'}), 401
+
+    return jsonify({'message': 'Acceso permitido', 'user': user_data}), 200
+
 
 if __name__ == '__main__':
     app.run(port=5050, debug=True)

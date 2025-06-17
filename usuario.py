@@ -3,6 +3,8 @@ from werkzeug.security import check_password_hash
 from sqlalchemy import text, create_engine
 from sqlalchemy.exc import SQLAlchemyError
 from config import DATABASE_URI
+import jwt
+from datetime import datetime, timedelta
 
 engine = create_engine(DATABASE_URI)
 
@@ -114,7 +116,6 @@ def delete_micuenta(id):
         return jsonify({'error': 'Error al eliminar usuario', 'detalle': str(e)}), 500
     
 
-
 def login_usuario():
     data = request.get_json()
     email = data.get("Email")
@@ -130,5 +131,21 @@ def login_usuario():
     if not result or result.CONTRASENIA != contrasenia_ingresada:
         return jsonify({'error': 'Email o contraseña incorrectos'}), 401
 
-    return jsonify({'message': 'Inicio de sesión exitoso', 'user_id': result.ID_USUARIO}), 200
+    # Generar token JWT sin expiración
+    token = jwt.encode(
+        {"id": result.ID_USUARIO, "email": result.EMAIL},
+        "clave_secreta",  # Cambia esto por una clave segura
+        algorithm="HS256"
+    )
+    return jsonify({'message': 'Inicio de sesión exitoso', 'token': token}), 200
 
+
+def validar_token(token):
+    try:
+        decoded = jwt.decode(token, "clave_secreta", algorithms=["HS256"])
+        return decoded
+    except jwt.ExpiredSignatureError:
+        return None
+    except jwt.InvalidTokenError:
+        return None
+    
