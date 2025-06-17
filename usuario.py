@@ -63,3 +63,52 @@ def add_usuario():
 
     except Exception as e:
         return jsonify({'error': 'Error inesperado', 'detalle': str(e)}), 500    
+    
+
+
+
+def update_micuenta(id):
+    data = request.get_json()
+    query = """
+        UPDATE USUARIO
+        SET 
+            EMAIL = :Email_usuario,
+            NOMBRE = :Nombre_usuario,
+            APELLIDO = :Apellido,
+            DIRECCION = :Direccion,
+            PISO = :Piso,
+            DNI = :DNI,
+            TIMBRE = :Timbre
+        WHERE ID_USUARIO = :ID_usuario;
+    """
+    params = {
+        "ID_usuario": id,
+        "Email_usuario": data["Email_usuario"],
+        "Nombre_usuario": data["Nombre_usuario"],
+        "Apellido": data["Apellido"],
+        "Direccion": data["Direccion"],
+        "Piso": data["Piso"],
+        "DNI": data["DNI"],
+        "Timbre": data["Timbre"]
+    }
+
+    try:
+        push_data_db(query, params)
+        return jsonify({'message': 'Datos del usuario actualizados correctamente'}), 200
+
+    except Exception as e:
+        return jsonify({'error': 'Error inesperado', 'detalle': str(e)}), 500
+
+
+
+def delete_micuenta(id):
+    query = "DELETE FROM USUARIO WHERE ID_USUARIO = :id;"
+    params = {'id': id}
+
+    try:
+        push_data_db(query, params)
+        return jsonify({'message': f'Usuario con ID {id} eliminado correctamente'}), 200
+    except Exception as e:
+        return jsonify({'error': 'Error al eliminar usuario', 'detalle': str(e)}), 500
+    
+

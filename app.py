@@ -59,9 +59,25 @@ def usuarios():
         return usuario.add_usuario()
     return None
 
-@app.route('/api/usuario/<id>', methods=['GET'])
-def mostrar_usuario(id):
-    return usuario.get_usuario(id)
+
+
+#CARGAR DATOS EN MI CUENTA
+
+@app.route('/api/usuario/<id>', methods=['GET','PUT','DELETE'])
+def micuenta(id):
+
+    if request.method == 'GET':
+        return usuario.get_usuario(id)
+
+    if request.method == 'PUT':
+        return usuario.update_micuenta(id)
+    
+    if request.method == 'DELETE':
+        return usuario.delete_micuenta(id)
+
+    return None
+
+
 
 
 if __name__ == '__main__':
