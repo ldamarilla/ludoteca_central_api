@@ -12,5 +12,9 @@ CREATE TABLE `USUARIO` (
   `TIMBRE` varchar(10) NULL,
   `APELLIDO` varchar(255) NULL,
   `DNI` int NULL,
+  `ADMIN` boolean
   PRIMARY KEY (`ID_USUARIO`)
 )
+
+INSERT INTO `USUARIO` (NOMBRE,EMAIL,CONTRASENIA) VALUES ('Tomas','tomas@gmail.com','1234');
+INSERT INTO `USUARIO` (NOMBRE,EMAIL,CONTRASENIA) VALUES ('Santiago','Santiago@gmail.com','1234');

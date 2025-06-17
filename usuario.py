@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, request
+from werkzeug.security import check_password_hash
 from sqlalchemy import text, create_engine
 from sqlalchemy.exc import SQLAlchemyError
 from config import DATABASE_URI
@@ -28,8 +29,9 @@ def get_usuarios():
     for row in result:
         usuario = dict()
         usuario['id'] = row.ID_USUARIO
-        usuario['Email_usuario'] = row.EMAIL
+        usuario['Email'] = row.EMAIL
         usuario['Contrasenia'] = row.CONTRASENIA
+        usuario['ADMIN']=row.ADMIN
 
         
         usuarios.append(usuario)
@@ -46,7 +48,7 @@ def get_usuario(id):
 
     usuario = {
         'id': result.ID_USUARIO,
-        'Email_usuario': result.EMAIL,
+        'Email': result.EMAIL,
         'Contrasenia': result.CONTRASENIA
     }
 
@@ -54,8 +56,8 @@ def get_usuario(id):
 
 def add_usuario():
     data = request.get_json()
-    query = "INSERT INTO USUARIO (EMAIL,CONTRASENIA) VALUES (:Email_usuario, :Contrasenia);"
-    params = { "Email_usuario": data["Email_usuario"],"Contrasenia": data["Contrasenia"] }
+    query = "INSERT INTO USUARIO (EMAIL,CONTRASENIA,ADMIN) VALUES (:Email, :Contrasenia, :ADMIN);"
+    params = { "Email": data["Email"],"Contrasenia": data["Contrasenia"],"ADMIN": data.get("ADMIN", 0)  }
 
     try:
         push_data_db(query, params)
@@ -72,8 +74,8 @@ def update_micuenta(id):
     query = """
         UPDATE USUARIO
         SET 
-            EMAIL = :Email_usuario,
-            NOMBRE = :Nombre_usuario,
+            EMAIL = :Email,
+            NOMBRE = :Nombre,
             APELLIDO = :Apellido,
             DIRECCION = :Direccion,
             PISO = :Piso,
@@ -83,8 +85,8 @@ def update_micuenta(id):
     """
     params = {
         "ID_usuario": id,
-        "Email_usuario": data["Email_usuario"],
-        "Nombre_usuario": data["Nombre_usuario"],
+        "Email": data["Email"],
+        "Nombre": data["Nombre"],
         "Apellido": data["Apellido"],
         "Direccion": data["Direccion"],
         "Piso": data["Piso"],
@@ -111,4 +113,22 @@ def delete_micuenta(id):
     except Exception as e:
         return jsonify({'error': 'Error al eliminar usuario', 'detalle': str(e)}), 500
     
+
+
+def login_usuario():
+    data = request.get_json()
+    email = data.get("Email")
+    contrasenia_ingresada = data.get("Contrasenia")
+
+    if not email or not contrasenia_ingresada:
+        return jsonify({'error': 'Faltan credenciales (email o contraseña)'}), 400
+
+    query = "SELECT ID_USUARIO, EMAIL, CONTRASENIA FROM USUARIO WHERE EMAIL = :email;"
+    params = {'email': email}
+    result = pull_data_db(query, params).first()
+
+    if not result or result.CONTRASENIA != contrasenia_ingresada:
+        return jsonify({'error': 'Email o contraseña incorrectos'}), 401
+
+    return jsonify({'message': 'Inicio de sesión exitoso', 'user_id': result.ID_USUARIO}), 200
 

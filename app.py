@@ -1,6 +1,6 @@
 from base64 import b64decode, b64encode
 from flask import Flask, jsonify, request
-import admin,usuario,db
+import usuario,db
 
 from config import DATABASE_URI
 
@@ -37,17 +37,6 @@ def get_categoria(id):
     return db.get_categoria(id)
 
 
-# VER ADMIN
-
-@app.route('/api/ver-admin', methods=['GET'])
-def get_admins():
-    return admin.get_admins()
-
-
-@app.route('/api/ver-admin/<id>', methods=['GET'])
-def get_admin(id):
-    return admin.get_admin(id)
-
 # CARGAR USUARIO
 
 @app.route('/api/usuario', methods=['GET', 'POST'])
@@ -77,6 +66,15 @@ def micuenta(id):
 
     return None
 
+#LOGIN
+
+@app.route('/api/login', methods=['POST'])
+def login ():
+
+    if request.method == 'POST':
+        return usuario.login_usuario()
+
+    return None
 
 
 
