@@ -1,9 +1,7 @@
 from flask import Flask, jsonify, request
-from werkzeug.security import check_password_hash
 from sqlalchemy import text, create_engine
 from sqlalchemy.exc import SQLAlchemyError
 from config import DATABASE_URI
-import jwt
 from datetime import datetime, timedelta
 
 engine = create_engine(DATABASE_URI)
@@ -131,21 +129,8 @@ def login_usuario():
     if not result or result.CONTRASENIA != contrasenia_ingresada:
         return jsonify({'error': 'Email o contraseña incorrectos'}), 401
 
-    # Generar token JWT sin expiración
-    token = jwt.encode(
-        {"id": result.ID_USUARIO, "email": result.EMAIL},
-        "clave_secreta",  # Cambia esto por una clave segura
-        algorithm="HS256"
-    )
-    return jsonify({'message': 'Inicio de sesión exitoso', 'token': token}), 200
+    # Si pasa la validación, devuelvo mensaje OK
+    return jsonify({'message': 'Login exitoso', 'id_usuario': result.ID_USUARIO}), 200
 
 
-def validar_token(token):
-    try:
-        decoded = jwt.decode(token, "clave_secreta", algorithms=["HS256"])
-        return decoded
-    except jwt.ExpiredSignatureError:
-        return None
-    except jwt.InvalidTokenError:
-        return None
-    
+
