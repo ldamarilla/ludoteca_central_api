@@ -101,15 +101,14 @@ def add_producto():
     except Exception as e:
         return jsonify({'error': 'Error inesperado', 'detalle': str(e)}), 500
 
-def update_stock_producto(id):
-    data = request.get_json()
+def update_stock_producto(id, cantidad):
     validation_producto_query = f"""SELECT ID FROM PRODUCTOS p WHERE ID ='{id}';"""
     validation_producto_result = pull_data_db(validation_producto_query).first()
 
     if not validation_producto_result:
         return jsonify({'error': 'Producto no hallado'}), 404
 
-    query = f"""UPDATE PRODUCTOS SET stock='{data['stock']}' WHERE ID ='{id}';"""
+    query = f"""UPDATE PRODUCTOS SET stock='{cantidad}' WHERE ID ='{id}';"""
 
     try:
         push_data_db(query)
@@ -118,6 +117,21 @@ def update_stock_producto(id):
     except Exception as e:
         return jsonify({'error': 'Error inesperado', 'detalle': str(e)}), 500
 
+def delete_producto(id):
+    prod_query = f"""SELECT * FROM PRODUCTOS WHERE id='{id}';"""
+    prod_result = pull_data_db(prod_query).first()
+
+    if not prod_result:
+        return jsonify({'error': 'No existe producto a eliminar'}), 404
+
+    producto_a_eliminar_query = f"""DELETE FROM PRODUCTOS WHERE id='{id}';"""
+
+    try:
+        push_data_db(producto_a_eliminar_query)
+        return jsonify({'message': 'Se eliminó el carrito y sus productos correctamente'}), 200
+
+    except Exception as e:
+        return jsonify({'error': 'Error inesperado', 'detalle': str(e)}), 500
 
 #CATEGORIAS
 
@@ -163,22 +177,17 @@ def add_categoria():
 
 def add_producto_a_carrito():
     data = request.get_json()
-    validation_producto_query = f"""SELECT ID FROM PRODUCTOS p WHERE id ='{data['producto_id']}';"""
-    validation_producto_result = pull_data_db(validation_producto_query).first()
+    validation_producto_result = (pull_data_db(f"""SELECT * FROM PRODUCTOS p WHERE id ='{data['producto_id']}';""")
+                                  .first())
 
-    if not validation_producto_result:
-        return jsonify({'error': 'Producto no hallado'}), 404
+    if not validation_producto_result: return jsonify({'error': 'Producto no hallado'}), 404
 
     compra_en_progreso_query = "SELECT * FROM COMPRAS c WHERE FINALIZADA = false;"
     compra_en_progreso_result = pull_data_db(compra_en_progreso_query).first()
 
     if not compra_en_progreso_result:
        add_carrito_query = "INSERT INTO COMPRAS (FECHA, USUARIO_ID, FINALIZADA) VALUES (:fecha, :usuario_id, :finalizada);"
-       compra_params = {
-           "fecha": datetime.now(),
-           "usuario_id": get_usuario_logueado()["ID"],
-           "finalizada": False
-       }
+       compra_params = { "fecha": datetime.now(), "usuario_id": get_usuario_logueado()['ID'], "finalizada": False }
        push_data_db(add_carrito_query, compra_params)
 
     compra_en_progreso_result = pull_data_db(compra_en_progreso_query).first()
@@ -186,7 +195,7 @@ def add_producto_a_carrito():
     prod_params = {
         "compra_id": compra_en_progreso_result.ID,
         "producto_id": data["producto_id"],
-        "cantidad": 1
+        "cantidad": data["cantidad"]
     }
 
     try:
@@ -225,6 +234,6 @@ def get_usuario_logueado(): #mock, está harcodeado ahora
     usuario =  {
         "ID": 1
     }
-    return jsonify(usuario)
+    return usuario
 
 
