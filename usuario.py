@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, make_response
 from sqlalchemy import text, create_engine
 from sqlalchemy.exc import SQLAlchemyError
 from config import DATABASE_URI
@@ -160,17 +160,17 @@ def login_usuario():
     if not result2:
         return jsonify({'error': 'Error al subir el token a la base de datos'}), 401
 
-    return jsonify({'message': 'Login exitoso', 'id_usuario': result[0], 'Token': token}), 200
+    resp = make_response(jsonify({'message': 'Login exitoso', 'id_usuario': id_usuario, 'token': token}))
+    resp.set_cookie('token', token, httponly=True, samesite='Lax')
+    return resp, 200
 
 #FUNCION PARA TRAER EL TOKEN DEL USUARIO LOGUEADO
 def traer_token():
     #----------INICIO BLOQUE TOKEN----------
-    tokenn = request.headers.get("Authorization") #Obtiene el token del encabezado 'Authorization'
-    if not tokenn:  #Verifica Authorization
+    token = request.cookies.get("token") #trae el token desde las coockies
+    if not token:  #Verifica que se haya traido el token 
         return jsonify({"error": "Token no proporcionado. Se requiere encabezado Authorization."}), 401
-    if not tokenn.startswith('Bearer '): #Verifica y extrae el token del formato "Bearer <token>"
-        return jsonify({"error": "Formato de token inválido. Use 'Bearer <token>'."}), 401
-    token = tokenn.split(' ')[1] #Extrae solo la parte del token (UUID)
+    
     #Selecciona el usuario con el token y verifica que exista
     query = """SELECT TOKEN, ID_USUARIO FROM TOKEN_USUARIO WHERE TOKEN = :token_param"""
     params = {"token_param": token}

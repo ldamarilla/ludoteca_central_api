@@ -69,8 +69,8 @@ def login():
 
 #URL DE PRUEBA PARA VER SI EL TOKEN FUNCIONA PARA OBTENER LOS DATOS DEL USUARIO LOGUEADO
 @app.route("/api/pruebaLogueado", methods=["GET"])
-def perfil():
-    return usuario.perfil()
+def token():
+    return usuario.traer_token()
 
 
 if __name__ == '__main__':
