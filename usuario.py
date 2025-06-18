@@ -4,6 +4,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from config import DATABASE_URI
 from datetime import datetime, timedelta
 from tokens import tokens_activos
+import uuid
 
 engine = create_engine(DATABASE_URI)
 

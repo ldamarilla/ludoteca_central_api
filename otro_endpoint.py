@@ -1,29 +1,3 @@
-from flask import Flask, request, jsonify
-import uuid
-from tokens import tokens_activos
-
-app = Flask(__name__)
-
-
-#----------------------------------------------------------------------------------
-@app.route("/login", methods=["POST"])
-def login():
-    data = request.get_json()
-    email = data.get("email")
-    password = data.get("password")
-
-    usuario = usuarios.get(email)
-
-    if not usuario or usuario["password"] != password:
-        return jsonify({"error": "Credenciales incorrectas"}), 401
-
-    # Generar token
-    token = str(uuid.uuid4())
-    tokens_activos[token] = usuario["id"]
-
-    return jsonify({"token": token})
-
-#----------------------------------------------------------------------------------
 @app.route("/perfil", methods=["GET"])
 def perfil():
     # Guarda el token del usuario logueado

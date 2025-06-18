@@ -1,1 +1,1 @@
-tokens_activos{}
+tokens_activos = {}
