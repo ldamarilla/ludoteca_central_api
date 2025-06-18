@@ -18,12 +18,11 @@ CREATE TABLE `PRODUCTOS` (
   `CATEGORIA_ID` int,
   PRIMARY KEY (`ID`),
   KEY `CATEGORIA_ID` (`CATEGORIA_ID`),
-  CONSTRAINT `fk_producto_categoria_id`
+  CONSTRAINT `fk_produto_categoria_id`
         FOREIGN KEY (`CATEGORIA_ID`)
         REFERENCES `CATEGORIAS` (`ID`)
         ON DELETE SET NULL
 );
-
 #COMPRAS
 CREATE TABLE `COMPRAS` (
   `ID` int NOT NULL AUTO_INCREMENT,
@@ -46,3 +45,19 @@ CREATE TABLE `COMPRAS_PRODUCTOS` (
   CONSTRAINT `fk_compras_productos_producto_id` FOREIGN KEY (`PRODUCTO_ID`) REFERENCES `PRODUCTOS` (`ID`) ON DELETE CASCADE
 );
 
+INSERT INTO `CATEGORIAS` (`NOMBRE`) VALUES 
+('infantil'),
+('familiar'),
+('adultos'),
+('fantasía'),
+('juego de rol'),
+('aprendizaje'),
+('estrategia');
+
+INSERT INTO `PRODUCTOS` (`NOMBRE`,`PRECIO`,`STOCK`,`DESCRIPCION`,`CATEGORIA_ID`) VALUES 
+('TEG', 4000, null, 'Juego de estrategia por turnos de partidas de larga duracion', 4),
+('Ajedrez', 2500, null, 'El clásico juego de mesa etcetc', 7),
+('Monopoly', 3000, null, 'Ideal familia blablabla', 2),
+('D&D', 5000, null, 'Partidas largas de rol etcecte', 5),
+('4 en linea', 1500, null, 'hundir barcos y tal', 7),
+('UNO', 1000, null, 'para perder amistades y fragmentar a tu familia', 2);
