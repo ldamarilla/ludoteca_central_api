@@ -1,7 +1,6 @@
 from base64 import b64decode, b64encode
 from flask import Flask, jsonify, request
 import usuario,db, uuid
-from tokens import tokens_activos
 from config import DATABASE_URI
 
 app = Flask(__name__)
@@ -67,6 +66,11 @@ def micuenta(id):
 def login():
     return usuario.login_usuario()
 
+
+#URL DE PRUEBA PARA VER SI EL TOKEN FUNCIONA PARA OBTENER LOS DATOS DEL USUARIO LOGUEADO
+@app.route("/api/pruebaLogueado", methods=["GET"])
+def perfil():
+    return usuario.perfil()
 
 
 if __name__ == '__main__':
