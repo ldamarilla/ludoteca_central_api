@@ -12,6 +12,7 @@ CREATE TABLE `USUARIO` (
   `APELLIDO` varchar(255) NULL,
   `DNI` int NULL,
   `ADMIN` boolean,
+  `IMAGEN` varchar(1000) NULL,
   PRIMARY KEY (`ID_USUARIO`)
 );
 

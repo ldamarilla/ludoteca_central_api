@@ -91,7 +91,8 @@ def update_micuenta(id):
             DIRECCION = :Direccion,
             PISO = :Piso,
             DNI = :DNI,
-            TIMBRE = :Timbre
+            TIMBRE = :Timbre,
+            IMAGEN = :Imagen
         WHERE ID_USUARIO = :ID_usuario;
     """
     params = {
@@ -102,7 +103,8 @@ def update_micuenta(id):
         "Direccion": data["Direccion"],
         "Piso": data["Piso"],
         "DNI": data["DNI"],
-        "Timbre": data["Timbre"]
+        "Timbre": data["Timbre"],
+        "Imagen": data["Imagen"]
     }
 
     try:
