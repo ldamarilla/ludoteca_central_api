@@ -1,10 +1,9 @@
 from flask import Flask, request, jsonify
 import uuid
-from usuario import tokens_activos
+from tokens import tokens_activos
 
 app = Flask(__name__)
 
-tokens_activos = {}
 
 #----------------------------------------------------------------------------------
 @app.route("/login", methods=["POST"])

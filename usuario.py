@@ -3,8 +3,11 @@ from sqlalchemy import text, create_engine
 from sqlalchemy.exc import SQLAlchemyError
 from config import DATABASE_URI
 from datetime import datetime, timedelta
+from tokens import tokens_activos
 
 engine = create_engine(DATABASE_URI)
+
+tokens_activos = {}
 
 def pull_data_db(query, params=None):
     with engine.connect() as conn:
@@ -129,7 +132,10 @@ def login_usuario():
     if not result or result.CONTRASENIA != contrasenia_ingresada:
         return jsonify({'error': 'Email o contraseña incorrectos'}), 401
 
-    # Si pasa la validación, devuelvo mensaje OK
+    #Si pasa la validación, devuelvo mensaje OK
+    #Crea el token y asigna el id del usuario logueado a ese token
+    token = str(uuid.uuid4())
+    tokens_activos[token] = result["ID_USUARIO"]
     return jsonify({'message': 'Login exitoso', 'id_usuario': result.ID_USUARIO}), 200
 
 
