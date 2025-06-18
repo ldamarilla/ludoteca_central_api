@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, make_response
 from sqlalchemy import text, create_engine
 from sqlalchemy.exc import SQLAlchemyError
 from config import DATABASE_URI
@@ -153,6 +153,7 @@ def login_usuario():
     #Crea el token y asigna el id del usuario logueado a ese token
     token = str(uuid.uuid4())
     id_usuario = result[0]
+
     query2 = """ INSERT INTO TOKEN_USUARIO (TOKEN, ID_USUARIO)
                 VALUES (:token, :id_usuario); """
     params2 = {"token": token, "id_usuario": id_usuario}
@@ -161,25 +162,25 @@ def login_usuario():
     if not result2:
         return jsonify({'error': 'Error al subir el token a la base de datos'}), 401
 
-    return jsonify({'message': 'Login exitoso', 'id_usuario': result[0], 'Token': token}), 200
+    resp = make_response(jsonify({'message': 'Login exitoso', 'id_usuario': id_usuario, 'token': token}))
+    resp.set_cookie('token', token, httponly=True, samesite='Lax')
+    return resp, 200
 
-#FUNCION DE PRUEBA PARA EL TOKEN AL LOGUEAR 
-def perfil():
+#FUNCION PARA TRAER EL TOKEN DEL USUARIO LOGUEADO
+def traer_token():
     #----------INICIO BLOQUE TOKEN----------
-    tokenn = request.headers.get("Authorization") #Obtiene el token del encabezado 'Authorization'
-    if not tokenn:  #Verifica Authorization
+    token = request.cookies.get("token") #trae el token desde las coockies
+    if not token:  #Verifica que se haya traido el token 
         return jsonify({"error": "Token no proporcionado. Se requiere encabezado Authorization."}), 401
-    if not tokenn.startswith('Bearer '): #Verifica y extrae el token del formato "Bearer <token>"
-        return jsonify({"error": "Formato de token inválido. Use 'Bearer <token>'."}), 401
-    token = tokenn.split(' ')[1] #Extrae solo la parte del token (UUID)
+    
     #Selecciona el usuario con el token y verifica que exista
     query = """SELECT TOKEN, ID_USUARIO FROM TOKEN_USUARIO WHERE TOKEN = :token_param"""
-    params = {"token_param": token} 
+    params = {"token_param": token}
 
     try:
         result = pull_data_db(query, params).first()
     except Exception as e:
-        return jsonify({"error": "eRROR AL VALIDAR"}), 500
+        return jsonify({"error": "Error al validar"}), 500
 
     if not result:
         return jsonify({"error": "Usuario con token no encontrado"}), 401
@@ -188,9 +189,7 @@ def perfil():
     #Obtene el ID del usuario asociado al token
     usuario_id = result[1]
 
-    query2 = """SELECT ID_USUARIO, EMAIL, CONTRASENIA, NOMBRE, DIRECCION, PISO,
-                TIMBRE, APELLIDO, DNI, ADMIN
-                FROM USUARIO
+    query2 = """SELECT ID_USUARIO, EMAIL, CONTRASENIA FROM USUARIO
                 WHERE ID_USUARIO = :usuario_id;"""
     params2 = {"usuario_id": usuario_id}
     result2 = pull_data_db(query2, params2).first()
@@ -202,13 +201,6 @@ def perfil():
         "ID_USUARIO": result2[0],
         "EMAIL": result2[1],
         "CONTRASENIA": result2[2],
-        "NOMBRE": result2[3],
-        "DIRECCION": result2[4],
-        "PISO": result2[5],
-        "TIMBRE": result2[6],
-        "APELLIDO": result2[7],
-        "DNI": result2[8],
-        "ADMIN": bool(result2[9])
     }
 
     return jsonify(usuario_data), 200
