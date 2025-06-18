@@ -120,6 +120,39 @@ def delete_micuenta(id):
 
 def login_usuario():
     data = request.get_json()
+    # Verifica si la solicitud es JSON y si completan 'Email' y 'Contrasenia' 
+    if not data:
+        return jsonify({'error': 'No se proporcionó cuerpo JSON en la solicitud'}), 400
+
+    email = data.get("Email")
+    contrasenia_ingresada = data.get("Contrasenia")
+
+    # Verifica que las credenciales no estén vacías
+    if not email or not contrasenia_ingresada:
+        return jsonify({'error': 'Faltan credenciales (email o contraseña)'}), 400
+
+    # SQL para obtener email y contrasenia; pasamos parametros
+    query = "SELECT ID_USUARIO, EMAIL, CONTRASENIA FROM USUARIO WHERE EMAIL = :email;"
+    params = {'email': email}
+    result = pull_data_db(query, params).first()
+
+    # Verifica si se encontró un usuario y si la contraseña coincide
+    # Se accede a la contraseña por su índice (2)
+    if not result or result[2] != contrasenia_ingresada:
+        return jsonify({'error': 'Email o contraseña incorrectos'}), 401
+
+    #Si pasa la validación, devuelvo mensaje OK
+    #Crea el token y asigna el id del usuario logueado a ese token
+    token = str(uuid.uuid4())
+    tokens_activos[token] = result[0]
+    return jsonify({'message': 'Login exitoso', 'id_usuario': result[0]}), 200
+
+
+
+
+
+
+    data = request.get_json()
     email = data.get("Email")
     contrasenia_ingresada = data.get("Contrasenia")
 
@@ -138,6 +171,3 @@ def login_usuario():
     token = str(uuid.uuid4())
     tokens_activos[token] = result["ID_USUARIO"]
     return jsonify({'message': 'Login exitoso', 'id_usuario': result.ID_USUARIO}), 200
-
-
-
