@@ -11,9 +11,9 @@ CREATE TABLE `USUARIO` (
   `TIMBRE` varchar(10) NULL,
   `APELLIDO` varchar(255) NULL,
   `DNI` int NULL,
-  `ADMIN` boolean, -- ¡Aquí faltaba la coma!
+  `ADMIN` boolean,
   PRIMARY KEY (`ID_USUARIO`)
-); -- Es una buena práctica terminar la sentencia con punto y coma.
+);
 
 CREATE TABLE `TOKEN_USUARIO` (
   `TOKEN` VARCHAR (255) PRIMARY KEY,

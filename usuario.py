@@ -23,6 +23,14 @@ def push_data_db(query, data = None):
         )
         conn.commit()
 
+def modify_data_db(query, params=None):
+    with engine.begin() as conn:  
+        if params:
+            return conn.execute(text(query), params)
+        return conn.execute(text(query))
+
+
+
 
 def get_usuarios():
     query = "SELECT * FROM USUARIO;"
@@ -146,8 +154,8 @@ def login_usuario():
     query2 = """ INSERT INTO TOKEN_USUARIO (TOKEN, ID_USUARIO)
                 VALUES (:token, :id_usuario); """
     params2 = {"token": token, "id_usuario": id_usuario}
-    result2 = pull_data_db(query2, params2)
-
+    result2 = modify_data_db(query2, params2)
+    
     if not result2:
         return jsonify({'error': 'Error al subir el token a la base de datos'}), 401
 
@@ -176,9 +184,8 @@ def perfil():
     #----------FIN BLOQUE TOKEN----------
 
     #Obtene el ID del usuario asociado al token
-    usuario_id = result[0]
+    usuario_id = result[1]
 
-    #SQL para buscar los datos del usuario orrespondiente al id guardado
     query2 = """SELECT ID_USUARIO, EMAIL, CONTRASENIA, NOMBRE, DIRECCION, PISO,
                 TIMBRE, APELLIDO, DNI, ADMIN
                 FROM USUARIO
@@ -186,22 +193,20 @@ def perfil():
     params2 = {"usuario_id": usuario_id}
     result2 = pull_data_db(query2, params2).first()
 
-    #Verificar si se encontró el usuario en la base de datos
-    if not result:
-        return jsonify({"error": "Usuario asociado al token no encontrado en la base de datos."}), 404
+    if not result2:
+        return jsonify({"error": "Usuario no encontrado."}), 404
 
-    #Datos del usuario correspondiente al id guardado
     usuario_data = {
-        "ID_USUARIO": result[0],
-        "EMAIL": result[1],
-        "CONTRASENIA": result[2],
-        "NOMBRE": result[3],
-        "DIRECCION": result[4],
-        "PISO": result[5],
-        "TIMBRE": result[6],
-        "APELLIDO": result[7],
-        "DNI": result[8],
-        "ADMIN": result[9]
+        "ID_USUARIO": result2[0],
+        "EMAIL": result2[1],
+        "CONTRASENIA": result2[2],
+        "NOMBRE": result2[3],
+        "DIRECCION": result2[4],
+        "PISO": result2[5],
+        "TIMBRE": result2[6],
+        "APELLIDO": result2[7],
+        "DNI": result2[8],
+        "ADMIN": bool(result2[9])
     }
 
     return jsonify(usuario_data), 200
