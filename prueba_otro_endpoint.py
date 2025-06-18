@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 import uuid
+from usuario import tokens_activos
 
 app = Flask(__name__)
 
@@ -36,10 +37,10 @@ def perfil():
     #guarda el id del usuario al que le pertenece el token
     user_id = tokens_activos[token]
 
-    # Buscar usuario por por e; id previamente almacenado
+    # Buscar usuario por por el id previamente almacenado
     usuario = next((u for u in usuarios.values() if u["id"] == user_id), None)
 
     if not usuario:
         return jsonify({"error": "Usuario no encontrado"}), 404
 
-    return jsonify({ "id": usuario["id"] })
+    return jsonify({ "id": usuario["ID_USUARIO"] })
