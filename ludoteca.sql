@@ -60,4 +60,4 @@ INSERT INTO `PRODUCTOS` (`NOMBRE`,`PRECIO`,`STOCK`,`DESCRIPCION`,`CATEGORIA_ID`)
 ('Monopoly', 3000, null, 'Ideal familia blablabla', 2),
 ('D&D', 5000, null, 'Partidas largas de rol etcecte', 5),
 ('4 en linea', 1500, null, 'hundir barcos y tal', 7),
-('UNO', 1000, null, 'para perder amistades y fragmentar a tu familia', 2);
+('UNO', 1000, null, 'para perder amistades y fragmentar a tu familia', 2)
