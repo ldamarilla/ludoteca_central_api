@@ -46,13 +46,13 @@ CREATE TABLE `COMPRAS_PRODUCTOS` (
 );
 
 INSERT INTO `CATEGORIAS` (`NOMBRE`) VALUES 
-('infantil'),
-('familiar'),
-('adultos'),
-('fantasía'),
-('juego de rol'),
-('aprendizaje'),
-('estrategia');
+('Infantil'),
+('Familiar'),
+('Adultos'),
+('Fantasía'),
+('Juego de rol'),
+('Aprendizaje'),
+('Estrategia');
 
 INSERT INTO `PRODUCTOS` (`NOMBRE`,`PRECIO`,`STOCK`,`DESCRIPCION`,`CATEGORIA_ID`) VALUES 
 ('TEG', 4000, null, 'Juego de estrategia por turnos de partidas de larga duracion', 4),
