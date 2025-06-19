@@ -4,6 +4,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from config import DATABASE_URI
 from datetime import datetime, timedelta
 import uuid
+from bcrypt import hashpw, gensalt
 
 engine = create_engine(DATABASE_URI)
 
@@ -65,18 +66,44 @@ def get_usuario(id):
 
     return jsonify(usuario), 200
 
+
+
 def add_usuario():
     data = request.get_json()
-    query = "INSERT INTO USUARIO (EMAIL,CONTRASENIA,ADMIN) VALUES (:Email, :Contrasenia, :ADMIN);"
-    params = { "Email": data["Email"],"Contrasenia": data["Contrasenia"],"ADMIN": data.get("ADMIN", 0)  }
-
-    try:
-        push_data_db(query, params)
-        return jsonify({'message': 'Usuario creado correctamente'}), 201
-
-    except Exception as e:
-        return jsonify({'error': 'Error inesperado', 'detalle': str(e)}), 500    
+    email = data.get("Email")
+    contrasenia = data.get("Contrasenia")
     
+    # Validar campos requeridos
+    if not email or not contrasenia:
+        return jsonify({'error': 'Faltan datos obligatorios (Email y/o Contrasenia)'}), 400
+
+    # Validar si el email ya existe
+    check_query = "SELECT COUNT(*) AS count FROM USUARIO WHERE EMAIL = :Email;"
+    check_params = {"Email": email}
+    
+    try:
+        result = pull_data_db(check_query, check_params)
+        if result.scalar() > 0:  # Usar scalar() para COUNT
+            return jsonify({'error': 'El email ya está en uso'}), 400
+        
+        # Cifrar la contraseña
+        hashed_password = hashpw(contrasenia.encode(), gensalt()).decode()
+
+        # Insertar el usuario si no existe el email
+        insert_query = "INSERT INTO USUARIO (EMAIL, CONTRASENIA, ADMIN) VALUES (:Email, :Contrasenia, :ADMIN);"
+        insert_params = {
+            "Email": email,
+            "Contrasenia": hashed_password,
+            "ADMIN": data.get("ADMIN", 0)
+        }
+        push_data_db(insert_query, insert_params)
+        return jsonify({'message': 'Usuario creado correctamente'}), 201
+    
+    except SQLAlchemyError as e:
+        return jsonify({'error': 'Error en la base de datos', 'detalle': str(e)}), 500
+    except Exception as e:
+        return jsonify({'error': 'Error inesperado', 'detalle': str(e)}), 500
+
 
 
 
