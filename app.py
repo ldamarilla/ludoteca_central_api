@@ -35,14 +35,9 @@ def get_categoria(id):
 
 
 # CARGAR USUARIO
-@app.route('/api/usuario', methods=['GET', 'POST'])
+@app.route('/api/usuario', methods=['POST'])
 def usuarios():
-    if request.method == 'GET':
-        return usuario.get_usuarios()
-
-    if request.method == 'POST':
-        return usuario.add_usuario()
-    return None
+    return usuario.add_usuario()
 
 
 

@@ -29,27 +29,7 @@ def modify_data_db(query, params=None):
         if params:
             return conn.execute(text(query), params)
         return conn.execute(text(query))
-
-
-
-
-def get_usuarios():
-    query = "SELECT * FROM USUARIO;"
-    usuarios = list()
-    result = pull_data_db(query)
-
-    for row in result:
-        usuario = dict()
-        usuario['id'] = row.ID_USUARIO
-        usuario['Email'] = row.EMAIL
-        usuario['Contrasenia'] = row.CONTRASENIA
-        usuario['ADMIN']=row.ADMIN
-
-        
-        usuarios.append(usuario)
-
-    return jsonify(usuarios)
-
+    
 def get_usuario(id):
     query = "SELECT * FROM USUARIO WHERE ID_USUARIO = :id;"
     params = {'id': id}
