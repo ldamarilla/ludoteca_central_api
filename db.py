@@ -31,6 +31,7 @@ def get_productos():
         product['stock'] = row.STOCK
         product['descripcion'] = row.DESCRIPCION
         product['categoria_id'] = row.CATEGORIA_ID
+        product['imagen_url'] = row.IMAGEN
         products.append(product)
 
     return jsonify(products)
@@ -49,6 +50,7 @@ def get_producto(id):
     product['stock'] = result.STOCK
     product['descripcion'] = result.DESCRIPCION
     product['categoria_id'] = result.CATEGORIA_ID
+    product['imagen_url'] = result.IMAGEN
 
     return jsonify(product), 200
 
@@ -72,6 +74,7 @@ def get_productos_by_categoria(id):
         product['stock'] = row.STOCK
         product['descripcion'] = row.DESCRIPCION
         product['categoria_id'] = row.CATEGORIA_ID
+        product['imagen_url'] = row.IMAGEN
         products.append(product)
     return jsonify(products), 200
 
