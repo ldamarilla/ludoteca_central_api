@@ -91,11 +91,13 @@ def login_usuario():
     if not result2:
         return jsonify({'error': 'Error al subir el token a la base de datos'}), 401
 
-    resp = make_response(jsonify({'message': 'Login exitoso', 'id_usuario': id_usuario, 'token': token}))
-    resp.set_cookie('token', token, httponly=True, samesite='Lax')
-    return resp, 200
+    return jsonify({
+        'mensaje': 'Login exitoso',
+        'token': token
+    }), 200
 
-def traer_token():
+
+def validar_token():
     token = request.cookies.get("token") 
     if not token:  
         return jsonify({"error": "Token no proporcionado. Se requiere encabezado Authorization."}), 401
