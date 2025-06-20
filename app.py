@@ -48,8 +48,6 @@ def validar_token():
     return usuairo.validar_token()
 
 
-
-
 #CARGAR DATOS EN MI CUENTA
 @app.route('/api/usuario/<id>', methods=['GET','PUT','DELETE'])
 def micuenta(id):
@@ -67,11 +65,6 @@ def micuenta(id):
 
 
 
-
-#URL DE PRUEBA PARA VER SI EL TOKEN FUNCIONA PARA OBTENER LOS DATOS DEL USUARIO LOGUEADO
-@app.route("/api/pruebaLogueado", methods=["GET"])
-def token():
-    return usuario.traer_token()
 
 
 if __name__ == '__main__':

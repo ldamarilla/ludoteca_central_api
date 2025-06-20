@@ -69,6 +69,7 @@ def login_usuario():
 
     email = data.get("Email")
     contrasenia = data.get("Contrasenia")
+    
 
     if not email or not contrasenia:
         return jsonify({'error': 'Faltan credenciales (email o contraseña)'}), 400
