@@ -34,10 +34,14 @@ def get_categoria(id):
     return db.get_categoria(id)
 
 
-# CARGAR USUARIO
-@app.route('/api/usuario', methods=['POST'])
-def usuarios():
-    return usuario.add_usuario()
+#USUARIO
+@app.route('/api/usuario/crear', methods=['POST'])
+def crear_cuenta():
+        return usuario.crear_cuenta()
+
+@app.route('/api/usuario/login', methods=['POST'])
+def login_usuario():
+    return usuario.login_usuario()
 
 
 
@@ -56,10 +60,7 @@ def micuenta(id):
 
     return None
 
-#LOGIN
-@app.route('/api/login', methods=['POST'])
-def login():
-    return usuario.login_usuario()
+
 
 
 #URL DE PRUEBA PARA VER SI EL TOKEN FUNCIONA PARA OBTENER LOS DATOS DEL USUARIO LOGUEADO
