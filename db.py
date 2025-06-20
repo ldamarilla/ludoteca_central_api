@@ -72,6 +72,7 @@ def get_productos_by_categoria(id):
         product['stock'] = row.STOCK
         product['descripcion'] = row.DESCRIPCION
         product['categoria_id'] = row.CATEGORIA_ID
+        product['imagen_url'] = row.IMAGEN
         products.append(product)
     return jsonify(products), 200
 
