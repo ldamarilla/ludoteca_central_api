@@ -43,7 +43,7 @@ def crear_cuenta():
 def login_usuario():
     return usuario.login_usuario()
 
-@app.route('api/usuario/token', methods=['GET'])
+@app.route('/api/usuario/token', methods=['GET'])
 def validar_token():
     return usuairo.validar_token()
 

@@ -4,7 +4,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from config import DATABASE_URI
 from datetime import datetime, timedelta
 import uuid
-from bcrypt import hashpw, gensalt
+from bcrypt import hashpw, checkpw, gensalt
 
 engine = create_engine(DATABASE_URI)
 
@@ -35,27 +35,27 @@ def crear_cuenta():
     email = data.get("Email")
     contrasenia = data.get("Contrasenia")
     
-    if not email or not contrasenia:
-        return jsonify({'error': 'Faltan datos obligatorios (Email y/o Contrasenia)'}), 400
+    try:
+        if not email or not contrasenia:
+            return jsonify({'error': 'Faltan datos obligatorios (Email y/o Contrasenia)'}), 400
 
-    check_query = "SELECT COUNT(*) AS count FROM USUARIO WHERE EMAIL = :Email;"
-    check_params = {"Email": email}
-    result = pull_data_db(check_query, check_params)
+        check_query = "SELECT COUNT(*) AS count FROM USUARIO WHERE EMAIL = :Email;"
+        check_params = {"Email": email}
+        result = pull_data_db(check_query, check_params).first()
 
-    if result and result.COUNT > 0:
-        return jsonify({return jsonify('error': 'Email en uso'), 400})
+        if result and result[0] > 0:
+            return jsonify({'error': 'Email en uso'}), 400
+            
+        hashed_password = hashpw(contrasenia.encode(), gensalt()).decode()
+
+        insert_query = "INSERT INTO USUARIO (EMAIL, CONTRASENIA, ADMIN) VALUES (:Email, :Contrasenia, :ADMIN);"
+        insert_params = {
+            "Email": email,
+            "Contrasenia": hashed_password,
+            "ADMIN": data.get("ADMIN", 0)
+        }
         
-    hashed_password = hashpw(contrasenia.encode(), gensalt()).decode()
-
-    insert_query = "INSERT INTO USUARIO (EMAIL, CONTRASENIA, ADMIN) VALUES (:Email, :Contrasenia, :ADMIN);"
-    insert_params = {
-        "Email": email,
-        "Contrasenia": hashed_password,
-        "ADMIN": data.get("ADMIN", 0)
-    }
-    result2 = push_data_db(insert_query, insert_params)
-
-    if result2:
+        result2 = push_data_db(insert_query, insert_params)
         return jsonify({'message': 'Usuario creado correctamente'}), 201
     
     except SQLAlchemyError as e:
@@ -70,14 +70,14 @@ def login_usuario():
     email = data.get("Email")
     contrasenia = data.get("Contrasenia")
 
-    if not email or not contrasenia_ingresada:
+    if not email or not contrasenia:
         return jsonify({'error': 'Faltan credenciales (email o contraseña)'}), 400
 
     query = "SELECT ID_USUARIO, EMAIL, CONTRASENIA FROM USUARIO WHERE EMAIL = :email;"
     params = {'email': email}
     result = pull_data_db(query, params).first()
 
-    if not result or checkpw(contrasenia_ingresada.encode(), result[2].encode()):
+    if not result or not checkpw(contrasenia.encode(), result[2].encode()):
         return jsonify({'error': 'Email o contraseña incorrectos'}), 401
 
     token = str(uuid.uuid4())
