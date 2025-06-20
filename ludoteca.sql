@@ -57,7 +57,7 @@ INSERT INTO `CATEGORIAS` (`NOMBRE`) VALUES
 
 INSERT INTO `PRODUCTOS` (`NOMBRE`,`PRECIO`,`STOCK`,`DESCRIPCION`,`CATEGORIA_ID`, `IMAGEN`) VALUES 
 ('TEG', 4000, null, 'Juego de estrategia por turnos de partidas de larga duracion', 4, 'images/gris.jpeg'),
-('Ajedrez', 2500, null, 'El clásico juego de mesa etcetc', 7, '/images/ajedrez.jpeg'),
+('Ajedrez', 2500, null, 'El clásico juego de mesa etcetc', 7, '/images/ajedrez.jpg'),
 ('Monopoly', 3000, null, 'Ideal familia blablabla', 2, 'images/gris.jpeg'),
 ('D&D', 5000, null, 'Partidas largas de rol etcecte', 5, 'images/gris.jpeg'),
 ('4 en linea', 1500, null, 'hundir barcos y tal', 7, 'images/gris.jpeg'),
