@@ -56,17 +56,17 @@ INSERT INTO `CATEGORIAS` (`NOMBRE`) VALUES
 ('Estrategia');
 
 INSERT INTO `PRODUCTOS` (`NOMBRE`,`PRECIO`,`STOCK`,`DESCRIPCION`,`CATEGORIA_ID`, `IMAGEN`) VALUES 
-('TEG', 4000, null, 'Juego de estrategia por turnos de partidas de larga duracion', 4, 'images/gris.jpeg'),
-('Ajedrez', 2500, null, 'El clásico juego de mesa etcetc', 7, 'images/ajedrez.jpg'),
-('Monopoly', 3000, null, 'Ideal familia blablabla', 2, 'images/gris.jpeg'),
-('D&D', 5000, null, 'Partidas largas de rol etcecte', 5, 'images/gris.jpeg'),
-('4 en linea', 1500, null, 'hundir barcos y tal', 7, 'images/gris.jpeg'),
-('UNO', 1000, null, 'para perder amistades y fragmentar a tu familia', 2, 'images/gris.jpeg'),
-('Pictionary', 3500, null, 'Juego de dibujo familiar', 2, 'images/gris.jpeg'),
-('Carrera de mente', 2000, null, 'Preguntas desafiantasnda', 6, 'images/gris.jpeg'),
-('Damas', 2250, null, 'clasico etctec', 7, 'images/gris.jpeg'),
-('Ludo', 1750, null, 'juego de familia muy familiar', 2, 'images/gris.jpeg'),
-('Backgammon', 2199, null, 'azar y estrategia', 7, 'images/gris.jpeg'),
-('Scrabble', 3200, null, 'Forma palabras para ganar', 6, 'images/gris.jpeg');
+('TEG', 4000, null, 'Juego de estrategia por turnos de partidas de larga duracion', 4, 'images/teg.jpeg'),
+('Ajedrez', 2500, null, 'El clásico juego de mesa etcetc', 7, 'images/ajedrez.jpeg'),
+('Monopoly', 3000, null, 'Ideal familia blablabla', 2, 'images/monopoly.png'),
+('D&D', 5000, null, 'Partidas largas de rol etcecte', 5, 'images/dnd.jpeg'),
+('4 en linea', 1500, null, 'hundir barcos y tal', 7, 'images/4linea.jpeg'),
+('UNO', 1000, null, 'para perder amistades y fragmentar a tu familia', 2, 'images/uno.jpeg'),
+('Pictionary', 3500, null, 'Juego de dibujo familiar', 2, 'images/pictionary.jpeg'),
+('Carrera de mente', 2000, null, 'Preguntas desafiantasnda', 6, 'images/carreramente.jpeg'),
+('Damas', 2250, null, 'clasico etctec', 7, 'images/damas.png'),
+('Ludo', 1750, null, 'juego de familia muy familiar', 2, 'images/ludo.jpeg'),
+('Backgammon', 2199, null, 'azar y estrategia', 7, 'images/backgammon.jpeg'),
+('Scrabble', 3200, null, 'Forma palabras para ganar', 6, 'images/scrabble.jpeg');
 
 
