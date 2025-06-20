@@ -60,4 +60,10 @@ INSERT INTO `PRODUCTOS` (`NOMBRE`,`PRECIO`,`STOCK`,`DESCRIPCION`,`CATEGORIA_ID`)
 ('Monopoly', 3000, null, 'Ideal familia blablabla', 2),
 ('D&D', 5000, null, 'Partidas largas de rol etcecte', 5),
 ('4 en linea', 1500, null, 'hundir barcos y tal', 7),
-('UNO', 1000, null, 'para perder amistades y fragmentar a tu familia', 2);
+('UNO', 1000, null, 'para perder amistades y fragmentar a tu familia', 2),
+('Pictionary', 3500, null, 'Juego de dibujo familiar', 2),
+('Carrera de mente', 2000, null, 'Preguntas desafiantasnda', 6),
+('Damas', 2250, null, 'clasico etctec', 7),
+('Ludo', 1750, null, 'juego de familia muy familiar', 2),
+('Backgammon', 2199, null, 'azar y estrategia', 7),
+('Scrabble', 3200, null, 'Forma palabras para ganar', 6);
