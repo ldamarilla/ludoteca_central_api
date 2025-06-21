@@ -43,8 +43,8 @@ def crear_cuenta():
         check_params = {"Email": email}
         result = pull_data_db(check_query, check_params).first()
 
-        if result and result[0] > 0:
-            return jsonify({'error': 'Email en uso'}), 400
+        if result and len(result) > 0 and result[0] > 0:
+            return jsonify({'error': 'Email en uso'}), 409
             
         hashed_password = hashpw(contrasenia.encode(), gensalt()).decode()
 
@@ -59,9 +59,11 @@ def crear_cuenta():
         return jsonify({'message': 'Usuario creado correctamente'}), 201
     
     except SQLAlchemyError as e:
+        print(f"[ERROR API /usuario/crear]: {e}")
         return jsonify({'error': 'Error en la base de datos', 'detalle': str(e)}), 500
     except Exception as e:
-        return jsonify({'error': 'Error inesperado', 'detalle': str(e)}), 500
+        print(f"[ERROR API /usuario/crear]: {e}")
+        return jsonify({'error': 'Error en la base de datos', 'detalle': str(e)}), 500
 
 
 def login_usuario():
@@ -71,33 +73,41 @@ def login_usuario():
     contrasenia = data.get("Contrasenia")
     
 
-    if not email or not contrasenia:
-        return jsonify({'error': 'Faltan credenciales (email o contraseña)'}), 400
+    try:
+        if not email or not contrasenia:
+            return jsonify({'error': 'Faltan credenciales (email o contraseña)'}), 400
 
-    query = "SELECT ID_USUARIO, EMAIL, CONTRASENIA, ADMIN FROM USUARIO WHERE EMAIL = :email;"
-    params = {'email': email}
-    result = pull_data_db(query, params).first()
+        query = "SELECT ID_USUARIO, EMAIL, CONTRASENIA, ADMIN FROM USUARIO WHERE EMAIL = :email;"
+        params = {'email': email}
+        result = pull_data_db(query, params).first()
 
-    if not result or not checkpw(contrasenia.encode(), result[2].encode()):
-        return jsonify({'error': 'Email o contraseña incorrectos'}), 401
+        if not result or not checkpw(contrasenia.encode(), result[2].encode()):
+            return jsonify({'error': 'Email o contraseña incorrectos'}), 409
 
-    token = str(uuid.uuid4())
-    id_usuario = result[0]
-    admin_usuario = result[9]
+        token = str(uuid.uuid4())
+        id_usuario = result[0]
+        admin_usuario = result[3]
 
-    query2 = """ INSERT INTO TOKEN_USUARIO (TOKEN, ID_USUARIO)
-                VALUES (:token, :id_usuario); """
-    params2 = {"token": token, "id_usuario": id_usuario}
-    result2 = modify_data_db(query2, params2)
-    
-    if not result2:
-        return jsonify({'error': 'Error al subir el token a la base de datos'}), 401
+        query2 = """ INSERT INTO TOKEN_USUARIO (TOKEN, ID_USUARIO)
+                    VALUES (:token, :id_usuario); """
+        params2 = {"token": token, "id_usuario": id_usuario}
+        result2 = modify_data_db(query2, params2)
+        
+        if not result2:
+            return jsonify({'error': 'Error al subir el token a la base de datos'}), 401
 
-    return jsonify({
-        'mensaje': 'Login exitoso',
-        'token': token,
-        'rol': 'admin' if es_admin else 'usuario'
-    }), 200
+        return jsonify({
+            'mensaje': 'Login exitoso',
+            'token': token,
+            'rol': 'admin' if admin_usuario else 'usuario'
+        }), 200
+
+    except SQLAlchemyError as e:
+        print(f"[ERROR API /usuario/crear]: {e}")
+        return jsonify({'error': 'Error en la base de datos', 'detalle': str(e)}), 500
+    except Exception as e:
+        print(f"[ERROR API /usuario/crear]: {e}")
+        return jsonify({'error': 'Error en la base de datos', 'detalle': str(e)}), 500
 
 
 def validar_token():
