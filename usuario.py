@@ -74,7 +74,7 @@ def login_usuario():
     if not email or not contrasenia:
         return jsonify({'error': 'Faltan credenciales (email o contraseña)'}), 400
 
-    query = "SELECT ID_USUARIO, EMAIL, CONTRASENIA FROM USUARIO WHERE EMAIL = :email;"
+    query = "SELECT ID_USUARIO, EMAIL, CONTRASENIA, ADMIN FROM USUARIO WHERE EMAIL = :email;"
     params = {'email': email}
     result = pull_data_db(query, params).first()
 
@@ -83,6 +83,7 @@ def login_usuario():
 
     token = str(uuid.uuid4())
     id_usuario = result[0]
+    admin_usuario = result[9]
 
     query2 = """ INSERT INTO TOKEN_USUARIO (TOKEN, ID_USUARIO)
                 VALUES (:token, :id_usuario); """
@@ -94,8 +95,25 @@ def login_usuario():
 
     return jsonify({
         'mensaje': 'Login exitoso',
-        'token': token
+        'token': token,
+        'rol': 'admin' if es_admin else 'usuario'
     }), 200
+
+def validar_admin():
+    data = request.get_json()
+
+    email = data.get("Email")
+    contrasenia = data.get("Contrasenia")
+
+    if not email or not contrasenia:
+        return jsonify({'error': 'Faltan credenciales (email o contraseña)'}), 400
+
+    query = "SELECT ID_USUARIO, ADMIN FROM USUARIO WHERE EMAIL = :email;"
+    params = {'email': email}
+    result = pull_data_db(query, params).first()
+
+    if retult or not checkpw(contrasenia.encode(), result[2].encode()):
+        return jsonify({'error': 'Email o contraseña incorrectos'}), 401
 
 
 def validar_token():
