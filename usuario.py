@@ -8,6 +8,7 @@ from bcrypt import hashpw, checkpw, gensalt
 
 engine = create_engine(DATABASE_URI)
 
+
 def pull_data_db(query, params=None):
     with engine.connect() as conn:
         if params:
@@ -71,7 +72,6 @@ def login_usuario():
 
     email = data.get("Email")
     contrasenia = data.get("Contrasenia")
-    
 
     try:
         if not email or not contrasenia:
@@ -83,17 +83,6 @@ def login_usuario():
 
         if not result or not checkpw(contrasenia.encode(), result[2].encode()):
             return jsonify({'error': 'Email o contraseña incorrectos'}), 409
-
-        admin = 1
-        query = """SELECT EMAIL, CONTRASENIA FROM USUARIO WHERE ADMIN = :admin;"""
-        params = {'admin': admin}
-        resultprueba = pull_data_db(query, params).first()
-        print(resultprueba[1])
-        if resultprueba:
-            print("Email admin:", resultprueba[0])
-            print("Hash contraseña:", resultprueba[1])
-        else:
-            print("No se encontró ningún usuario admin.")
 
         token = str(uuid.uuid4())
         id_usuario = result[0]
@@ -120,7 +109,8 @@ def login_usuario():
         print(f"[ERROR API /usuario/crear]: {e}")
         return jsonify({'error': 'Error en la base de datos', 'detalle': str(e)}), 500
 
-
+    
+    
 def validar_token():
     token = request.cookies.get("token") 
     if not token:  
@@ -204,8 +194,6 @@ def update_micuenta(id):
 
     except Exception as e:
         return jsonify({'error': 'Error inesperado', 'detalle': str(e)}), 500
-
-
 
 def delete_micuenta(id):
     query = "DELETE FROM USUARIO WHERE ID_USUARIO = :id;"
