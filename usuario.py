@@ -99,22 +99,6 @@ def login_usuario():
         'rol': 'admin' if es_admin else 'usuario'
     }), 200
 
-def validar_admin():
-    data = request.get_json()
-
-    email = data.get("Email")
-    contrasenia = data.get("Contrasenia")
-
-    if not email or not contrasenia:
-        return jsonify({'error': 'Faltan credenciales (email o contraseña)'}), 400
-
-    query = "SELECT ID_USUARIO, ADMIN FROM USUARIO WHERE EMAIL = :email;"
-    params = {'email': email}
-    result = pull_data_db(query, params).first()
-
-    if retult or not checkpw(contrasenia.encode(), result[2].encode()):
-        return jsonify({'error': 'Email o contraseña incorrectos'}), 401
-
 
 def validar_token():
     token = request.cookies.get("token") 
