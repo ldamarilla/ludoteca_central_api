@@ -45,7 +45,7 @@ def login_usuario():
 
 @app.route('/api/usuario/token', methods=['GET'])
 def validar_token():
-    return usuairo.validar_token()
+    return usuario.validar_token()
 
 
 #CARGAR DATOS EN MI CUENTA
