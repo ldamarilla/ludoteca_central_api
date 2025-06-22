@@ -129,6 +129,26 @@ def validar_token():
     return usuario_id, 200
 
 #------------------------------Funciones de mi cuenta-------------------------------------
+def datos_micuenta():
+    usuario_id = validar_token()
+    if not usuario_id:
+        return jsonify({'error': 'Error al traer los datos'}), 401
+
+    try:
+        data = request.get_json
+
+        query = """ SELECT NOMBRE, APELLIDO, EMAIL, DNI, DIRECCION, PISO, TIMBRE 
+                    FROM USUARIO WHERE USUARIO_ID = :id """
+        params = {"id": usuario_id}
+        result = pull_data_db(query, params)
+
+        if not result:
+            return jsonify({'error': 'Error al traer los datos'}), 401
+        return result, 200
+    
+    except Exception as e:
+        return jsonify({'error': 'Error inesperado'}), 500
+
 def update_micuenta():
     usuario_id = validar_token()
     if not usuario_id:  
