@@ -149,7 +149,7 @@ def datos_micuenta():
     except Exception as e:
         return jsonify({'error': 'Error inesperado'}), 500
 
-def update_micuenta():
+def actualizar_micuenta():
     usuario_id = validar_token()
     if not usuario_id:  
         return jsonify({"error": "Error al traer los datos"}), 401
@@ -187,7 +187,7 @@ def update_micuenta():
     except Exception as e:
         return jsonify({'error': 'Error inesperado', 'detalle': str(e)}), 500
 
-def delete_micuenta():
+def eliminar_micuenta():
     usuario_id = validar_token()
     if not usuario_id:  
         return jsonify({"error": "Error al traer los datos"}), 401

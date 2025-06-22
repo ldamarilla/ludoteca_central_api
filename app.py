@@ -48,14 +48,18 @@ def validar_token():
     return usuario.validar_token()
 
 
-#CARGAR DATOS EN MI CUENTA
-@app.route('/api/usuario/<id>', methods=['GET','PUT','DELETE', 'POST'])
+#MI CUENTA
+@app.route('/api/mi-cuenta/traer-datos', methods=['GET', 'POST'])
+def datos_micuenta():
+    return usuario.datos_micuenta()
+
+@app.route('/api/mi-cuenta/modificar', methods=['GET','PUT','DELETE', 'POST'])
 def micuenta(id):
     accion = request.form.get('accion')
     if accion == 'PATCH':
-        return usuario.update_micuenta()
+        return usuario.actualizar_micuenta()
     elif accion == 'DELETE':
-        return usuario.delete_micuenta()
+        return usuario.eliminar_micuenta()
 
 
 
