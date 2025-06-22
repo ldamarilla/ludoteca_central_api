@@ -66,7 +66,6 @@ def crear_cuenta():
         print(f"[ERROR API /usuario/crear]: {e}")
         return jsonify({'error': 'Error en la base de datos', 'detalle': str(e)}), 500
 
-
 def login_usuario():
     data = request.get_json()
 
@@ -108,15 +107,13 @@ def login_usuario():
     except Exception as e:
         print(f"[ERROR API /usuario/crear]: {e}")
         return jsonify({'error': 'Error en la base de datos', 'detalle': str(e)}), 500
-
-    
     
 def validar_token():
     token = request.cookies.get("token") 
     if not token:  
-        return jsonify({"error": "Token no proporcionado. Se requiere encabezado Authorization."}), 401
+        return jsonify({"error": "Token no proporcionado."}), 401
     
-    query = """SELECT TOKEN, ID_USUARIO FROM TOKEN_USUARIO WHERE TOKEN = :token_param"""
+    query = """SELECT ID_USUARIO FROM TOKEN_USUARIO WHERE TOKEN = :token_param"""
     params = {"token_param": token}
 
     try:
@@ -127,70 +124,45 @@ def validar_token():
     if not result:
         return jsonify({"error": "Usuario con token no encontrado"}), 401
 
-    usuario_id = result[1]
+    usuario_id = result[0]
 
-    query2 = """SELECT ID_USUARIO, EMAIL, CONTRASENIA FROM USUARIO
-                WHERE ID_USUARIO = :usuario_id;"""
-    params2 = {"usuario_id": usuario_id}
-    result2 = pull_data_db(query2, params2).first()
+    return usuario_id, 200
 
-    if not result2:
-        return jsonify({"error": "Usuario no encontrado."}), 404
-
-    usuario_data = {
-        "ID_USUARIO": result2[0],
-        "EMAIL": result2[1],
-        "CONTRASENIA": result2[2],
-    }
-
-    return jsonify(usuario_data), 200
-
-def get_usuario(id):
-    query = "SELECT * FROM USUARIO WHERE ID_USUARIO = :id;"
-    params = {'id': id}
-    result = pull_data_db(query, params).first()
-    
-    if not result:
-        return jsonify({'error': 'Usuario no encontrado'}), 404
-
-    usuario = {
-        'id': result.ID_USUARIO,
-        'Email': result.EMAIL,
-        'Contrasenia': result.CONTRASENIA
-    }
-
-    return jsonify(usuario), 200
-
+#------------------------------Funciones de mi cuenta-------------------------------------
 def update_micuenta(id):
-    data = request.get_json()
-    query = """
-        UPDATE USUARIO
-        SET 
-            EMAIL = :Email,
-            NOMBRE = :Nombre,
-            APELLIDO = :Apellido,
-            DIRECCION = :Direccion,
-            PISO = :Piso,
-            DNI = :DNI,
-            TIMBRE = :Timbre,
-            IMAGEN = :Imagen
-        WHERE ID_USUARIO = :ID_usuario;
-    """
-    params = {
-        "ID_usuario": id,
-        "Email": data["Email"],
-        "Nombre": data["Nombre"],
-        "Apellido": data["Apellido"],
-        "Direccion": data["Direccion"],
-        "Piso": data["Piso"],
-        "DNI": data["DNI"],
-        "Timbre": data["Timbre"],
-        "Imagen": data["Imagen"]
-    }
+    usuario_id = validar_token()
+    if not usuario_id:  
+        return jsonify({"error": "Error al traer los datos"}), 401
 
-    try:
-        push_data_db(query, params)
-        return jsonify({'message': 'Datos del usuario actualizados correctamente'}), 200
+    try: 
+        data = request.get_json()
+        query = """ 
+                    UPDATE USUARIO
+                    SET 
+                        EMAIL = :Email,
+                        NOMBRE = :Nombre,
+                        APELLIDO = :Apellido,
+                        DIRECCION = :Direccion,
+                        PISO = :Piso,
+                        DNI = :DNI,
+                        TIMBRE = :Timbre
+                    WHERE ID_USUARIO = :ID_usuario;
+                """
+        params = {
+            "ID_usuario": usuario_id,
+            "Email": data["Email"] or None,
+            "Nombre": data["Nombre"] or None,
+            "Apellido": data["Apellido"] or None,
+            "Direccion": data["Direccion"] or None,
+            "Piso": data["Piso"] or None,
+            "DNI": data["DNI"] or None,
+            "Timbre": data["Timbre"] or None
+        }
+
+        result = push_data_db(query, params)
+        if not result:
+            return jsonify({'message': 'Un error ha sucesido. Intente de nuevo.'}), 400
+        return jsonify({'message': 'Datos del usuario actualizados correctamente.'}), 200
 
     except Exception as e:
         return jsonify({'error': 'Error inesperado', 'detalle': str(e)}), 500
