@@ -129,7 +129,7 @@ def validar_token():
     return usuario_id, 200
 
 #------------------------------Funciones de mi cuenta-------------------------------------
-def update_micuenta(id):
+def update_micuenta():
     usuario_id = validar_token()
     if not usuario_id:  
         return jsonify({"error": "Error al traer los datos"}), 401
@@ -167,15 +167,22 @@ def update_micuenta(id):
     except Exception as e:
         return jsonify({'error': 'Error inesperado', 'detalle': str(e)}), 500
 
-def delete_micuenta(id):
-    query = "DELETE FROM USUARIO WHERE ID_USUARIO = :id;"
-    params = {'id': id}
+def delete_micuenta():
+    usuario_id = validar_token()
+    if not usuario_id:  
+        return jsonify({"error": "Error al traer los datos"}), 401
 
     try:
-        push_data_db(query, params)
-        return jsonify({'message': f'Usuario con ID {id} eliminado correctamente'}), 200
+        query = "DELETE FROM USUARIO WHERE ID_USUARIO = :id;"
+        params = {'id': usuario_id}
+
+        result = push_data_db(query, params)
+        if not result:
+            return jsonify({'message': 'No fue posible eliminar el usuario correctamente'}), 400
+        return jsonify({'message': 'Usuario eliminado correctamente'}), 200
+
     except Exception as e:
-        return jsonify({'error': 'Error al eliminar usuario', 'detalle': str(e)}), 500
+        return jsonify({'error': 'Ha sucesido un error inesperado', 'detalle': str(e)}), 500
     
 
 
