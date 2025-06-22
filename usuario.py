@@ -109,7 +109,7 @@ def login_usuario():
         return jsonify({'error': 'Error en la base de datos', 'detalle': str(e)}), 500
     
 def validar_token():
-    token = request.cookies.get("token") 
+    token = request.cookies.get("token") or request.headers.get("Authorization", "").replace("Bearer ", "")
     if not token:  
         return None 
 
@@ -137,12 +137,11 @@ def datos_micuenta():
         query = """ SELECT NOMBRE, APELLIDO, EMAIL, DNI, DIRECCION, PISO, TIMBRE 
                     FROM USUARIO WHERE ID_USUARIO = :id """
         params = {"id": usuario_id}
-        result = pull_data_db(query, params)
+        usuario = pull_data_db(query, params).first()
 
-        if not result:
+        if not usuario:
             return jsonify({'error': 'Error al traer los datos'}), 401
 
-        usuario = result[0]
         data_usuario = {
             'nombre': usuario[0],
             'apellido': usuario[1],
@@ -155,6 +154,7 @@ def datos_micuenta():
         return jsonify(data_usuario), 200
     
     except Exception as e:
+        print(f"[ERROR API /mi-cuenta/traer-datos]: {e}")
         return jsonify({'error': 'Error inesperado'}), 500
 
 def actualizar_micuenta():
@@ -163,7 +163,10 @@ def actualizar_micuenta():
         return jsonify({"error": "Error al traer los datos"}), 401
 
     try: 
-        data = request.get_json()
+        data = request.form
+        if not data.get("Email"):
+            return jsonify({'error': 'El campo Email es obligatorio'}), 400
+
         query = """ 
                     UPDATE USUARIO
                     SET 
@@ -178,21 +181,22 @@ def actualizar_micuenta():
                 """
         params = {
             "ID_usuario": usuario_id,
-            "Email": data["Email"] or None,
-            "Nombre": data["Nombre"] or None,
-            "Apellido": data["Apellido"] or None,
-            "Direccion": data["Direccion"] or None,
-            "Piso": data["Piso"] or None,
-            "DNI": data["Dni"] or None,
-            "Timbre": data["Timbre"] or None
+            "Email": data.get("Email") or None,
+            "Nombre": data.get("Nombre") or None,
+            "Apellido": data.get("Apellido") or None,
+            "Direccion": data.get("Direccion") or None,
+            "Piso": data.get("Piso") or None,
+            "DNI": data.get("Dni") or None,
+            "Timbre": data.get("Timbre") or None
         }
 
         result = modify_data_db(query, params)
-        if not result:
+        if result.rowcount == 0:
             return jsonify({'error': 'Un error ha sucesido. Intente de nuevo.'}), 400
         return jsonify({'mensaje': 'Datos del usuario actualizados correctamente.'}), 200
 
     except Exception as e:
+        print(f"[ERROR API /mi-cuenta/actualizar]: {e}")
         return jsonify({'error': 'Error inesperado', 'detalle': str(e)}), 500
 
 def eliminar_micuenta():
@@ -201,20 +205,19 @@ def eliminar_micuenta():
         return jsonify({"error": "Error al traer los datos"}), 401
 
     try:
-        query = "DELETE FROM USUARIO WHERE ID_USUARIO = :id;"
+        query = "DELETE FROM TOKEN_USUARIO WHERE ID_USUARIO = :id;"
         params = {'id': usuario_id}
-
-        query2 = "DELETE FROM TOKEN_USUARIO WHERE ID_USUARIO = :id;"
-        params2 = {'id': usuario_id}
+        query2 = "DELETE FROM USUARIO WHERE ID_USUARIO = :id;"
 
         result = modify_data_db(query, params)
-        result2 = modify_data_db(query2, params2)
+        result2 = modify_data_db(query2, params)
         if not result or not result2:
             return jsonify({'error': 'No fue posible eliminar el usuario correctamente'}), 400
         return jsonify({'mensaje': 'Usuario eliminado correctamente'}), 200
 
     except Exception as e:
-        return jsonify({'error': 'Ha sucesido un error inesperado', 'detalle': str(e)}), 500
+        print(f"[ERROR API /mi-cuenta/eliminar]: {e}")
+        return jsonify({'error': 'Ha sucedido un error inesperado', 'detalle': str(e)}), 500
 
     return jsonify({'error': 'Error inesperado'}), 500
     

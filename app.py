@@ -47,25 +47,18 @@ def login_usuario():
 def validar_token():
     return usuario.validar_token()
 
-
 #MI CUENTA
 @app.route('/api/mi-cuenta/traer-datos', methods=['GET', 'POST'])
 def datos_micuenta():
     return usuario.datos_micuenta()
 
-@app.route('/api/mi-cuenta/modificar', methods=['GET','PATCH', 'POST'])
-def actualizar_micuenta(id):
-    accion = request.form.get('accion')
-    if accion == 'PATCH':
-        return usuario.actualizar_micuenta()
-    return jsonify({'error': 'Error no contemplado'}), 400
+@app.route('/api/mi-cuenta/actualizar', methods=['GET','PATCH', 'POST'])
+def actualizar_micuenta():
+    return usuario.actualizar_micuenta()
 
 @app.route('/api/mi-cuenta/eliminar', methods=['GET', 'DELETE', 'POST'])
 def eliminar_micuenta():
-    accion = request.form.get('accion')
-    if accion == 'DELETE':
-        return usuario.eliminar_micuenta()
-    return jsonify({'error': 'Error no contemplado'}), 400
+    return usuario.eliminar_micuenta()
 
 
 
