@@ -12,7 +12,6 @@ CREATE TABLE `USUARIO` (
   `APELLIDO` varchar(255) NULL,
   `DNI` int NULL,
   `ADMIN` boolean,
-  `IMAGEN` varchar(1000) NULL,
   PRIMARY KEY (`ID_USUARIO`)
 );
 
@@ -22,6 +21,5 @@ CREATE TABLE `TOKEN_USUARIO` (
   FOREIGN KEY (`ID_USUARIO`) REFERENCES `USUARIO`(`ID_USUARIO`)
 );
                                                                                          
-INSERT INTO `USUARIO`(NOMBRE,EMAIL,CONTRASENIA,ADMIN) VALUES ('Tomas','tomas@gmail.com','1234', 1);
-INSERT INTO `USUARIO` (NOMBRE,EMAIL,CONTRASENIA,ADMIN) VALUES ('Santiago','Santiago@gmail.com','1234',1);
+INSERT INTO `USUARIO`(NOMBRE,EMAIL,CONTRASENIA,ADMIN) VALUES ('Admin','admin@gmail.com','12345', 1);
 
