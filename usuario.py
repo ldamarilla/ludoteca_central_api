@@ -111,34 +111,31 @@ def login_usuario():
 def validar_token():
     token = request.cookies.get("token") 
     if not token:  
-        return jsonify({"error": "Token no proporcionado."}), 401
-    
+        return None 
+
     query = """SELECT ID_USUARIO FROM TOKEN_USUARIO WHERE TOKEN = :token_param"""
     params = {"token_param": token}
 
     try:
         result = pull_data_db(query, params).first()
-    except Exception as e:
-        return jsonify({"error": "Error al validar"}), 500
+    except Exception:
+        return None
 
     if not result:
-        return jsonify({"error": "Usuario con token no encontrado"}), 401
+        return None
 
     usuario_id = result[0]
-
-    return usuario_id, 200
+    return usuario_id
 
 #------------------------------Funciones de mi cuenta-------------------------------------
 def datos_micuenta():
     usuario_id = validar_token()
     if not usuario_id:
-        return jsonify({'error': 'Error al traer los datos'}), 401
+        return jsonify({'error': 'Token invalido o no proporcionado'}), 401
 
     try:
-        data = request.get_json
-
         query = """ SELECT NOMBRE, APELLIDO, EMAIL, DNI, DIRECCION, PISO, TIMBRE 
-                    FROM USUARIO WHERE USUARIO_ID = :id """
+                    FROM USUARIO WHERE ID_USUARIO = :id """
         params = {"id": usuario_id}
         result = pull_data_db(query, params)
 
@@ -186,7 +183,7 @@ def actualizar_micuenta():
             "Apellido": data["Apellido"] or None,
             "Direccion": data["Direccion"] or None,
             "Piso": data["Piso"] or None,
-            "DNI": data["DNI"] or None,
+            "DNI": data["Dni"] or None,
             "Timbre": data["Timbre"] or None
         }
 
@@ -211,13 +208,15 @@ def eliminar_micuenta():
         params2 = {'id': usuario_id}
 
         result = modify_data_db(query, params)
-        result2 = modify_data_db(query, params)
-        if not result and not result2:
+        result2 = modify_data_db(query2, params2)
+        if not result or not result2:
             return jsonify({'error': 'No fue posible eliminar el usuario correctamente'}), 400
         return jsonify({'mensaje': 'Usuario eliminado correctamente'}), 200
 
     except Exception as e:
         return jsonify({'error': 'Ha sucesido un error inesperado', 'detalle': str(e)}), 500
+
+    return jsonify({'error': 'Error inesperado'}), 500
     
 
 

@@ -58,12 +58,14 @@ def actualizar_micuenta(id):
     accion = request.form.get('accion')
     if accion == 'PATCH':
         return usuario.actualizar_micuenta()
+    return jsonify({'error': 'Error no contemplado'}), 400
 
 @app.route('/api/mi-cuenta/eliminar', methods=['GET', 'DELETE', 'POST'])
 def eliminar_micuenta():
     accion = request.form.get('accion')
     if accion == 'DELETE':
         return usuario.eliminar_micuenta()
+    return jsonify({'error': 'Error no contemplado'}), 400
 
 
 
