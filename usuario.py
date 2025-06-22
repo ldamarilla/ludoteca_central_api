@@ -159,7 +159,7 @@ def update_micuenta():
             "Timbre": data["Timbre"] or None
         }
 
-        result = push_data_db(query, params)
+        result = modify_data_db(query, params)
         if not result:
             return jsonify({'message': 'Un error ha sucesido. Intente de nuevo.'}), 400
         return jsonify({'message': 'Datos del usuario actualizados correctamente.'}), 200
@@ -176,8 +176,12 @@ def delete_micuenta():
         query = "DELETE FROM USUARIO WHERE ID_USUARIO = :id;"
         params = {'id': usuario_id}
 
-        result = push_data_db(query, params)
-        if not result:
+        query2 = "DELETE FROM TOKEN_USUARIO WHERE ID_USUARIO = :id;"
+        params2 = {'id': usuario_id}
+
+        result = modify_data_db(query, params)
+        result2 = modify_data_db(query, params)
+        if not result and not result2:
             return jsonify({'message': 'No fue posible eliminar el usuario correctamente'}), 400
         return jsonify({'message': 'Usuario eliminado correctamente'}), 200
 
