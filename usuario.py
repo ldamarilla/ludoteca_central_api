@@ -57,7 +57,7 @@ def crear_cuenta():
         }
         
         result2 = push_data_db(insert_query, insert_params)
-        return jsonify({'message': 'Usuario creado correctamente'}), 201
+        return jsonify({'mensaje': 'Usuario creado correctamente'}), 201
     
     except SQLAlchemyError as e:
         print(f"[ERROR API /usuario/crear]: {e}")
@@ -144,7 +144,18 @@ def datos_micuenta():
 
         if not result:
             return jsonify({'error': 'Error al traer los datos'}), 401
-        return result, 200
+
+        usuario = result[0]
+        data_usuario = {
+            'nombre': usuario[0],
+            'apellido': usuario[1],
+            'email': usuario[2],
+            'dni': usuario[3],
+            'direccion': usuario[4],
+            'piso': usuario[5],
+            'timbre': usuario[6]
+        }
+        return jsonify(data_usuario), 200
     
     except Exception as e:
         return jsonify({'error': 'Error inesperado'}), 500
@@ -181,8 +192,8 @@ def actualizar_micuenta():
 
         result = modify_data_db(query, params)
         if not result:
-            return jsonify({'message': 'Un error ha sucesido. Intente de nuevo.'}), 400
-        return jsonify({'message': 'Datos del usuario actualizados correctamente.'}), 200
+            return jsonify({'error': 'Un error ha sucesido. Intente de nuevo.'}), 400
+        return jsonify({'mensaje': 'Datos del usuario actualizados correctamente.'}), 200
 
     except Exception as e:
         return jsonify({'error': 'Error inesperado', 'detalle': str(e)}), 500
@@ -202,8 +213,8 @@ def eliminar_micuenta():
         result = modify_data_db(query, params)
         result2 = modify_data_db(query, params)
         if not result and not result2:
-            return jsonify({'message': 'No fue posible eliminar el usuario correctamente'}), 400
-        return jsonify({'message': 'Usuario eliminado correctamente'}), 200
+            return jsonify({'error': 'No fue posible eliminar el usuario correctamente'}), 400
+        return jsonify({'mensaje': 'Usuario eliminado correctamente'}), 200
 
     except Exception as e:
         return jsonify({'error': 'Ha sucesido un error inesperado', 'detalle': str(e)}), 500
