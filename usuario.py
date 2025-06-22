@@ -5,6 +5,9 @@ from config import DATABASE_URI
 from datetime import datetime, timedelta
 import uuid
 from bcrypt import hashpw, checkpw, gensalt
+from re import match
+
+
 
 engine = create_engine(DATABASE_URI)
 
@@ -28,6 +31,10 @@ def modify_data_db(query, params=None):
         if params:
             return conn.execute(text(query), params)
         return conn.execute(text(query))
+    
+
+def es_hash_valido(contrasenia):
+    return match(r'^\$2[aby]?\$\d{2}\$[./A-Za-z0-9]{53}$', contrasenia) is not None
 
 #------------------------------Funciones de usuario-------------------------------------
 def crear_cuenta():
@@ -66,6 +73,39 @@ def crear_cuenta():
         print(f"[ERROR API /usuario/crear]: {e}")
         return jsonify({'error': 'Error en la base de datos', 'detalle': str(e)}), 500
 
+
+def actualizar_contrasenias_no_hasheadas():
+    try:
+        query_select = "SELECT ID_USUARIO, CONTRASENIA FROM USUARIO;"
+        query_update = "UPDATE USUARIO SET CONTRASENIA = :nueva_contrasenia WHERE ID_USUARIO = :id_usuario;"
+
+        with engine.connect() as conn:
+            result = conn.execute(text(query_select))
+
+            for row in result:
+                id_usuario = row[0]
+                contrasenia_actual = row[1]
+
+                # Si la contraseña no está hasheada
+                if not es_hash_valido(contrasenia_actual):
+                    print(f"[INFO] Hasheando contraseña para ID_USUARIO: {id_usuario}")
+                    nueva_contrasenia = hashpw(contrasenia_actual.encode(), gensalt()).decode()
+
+                    # Actualiza la contraseña
+                    conn.execute(
+                        text(query_update),
+                        {'nueva_contrasenia': nueva_contrasenia, 'id_usuario': id_usuario}
+                    )
+
+        print("[INFO] Todas las contraseñas no hasheadas fueron actualizadas.")
+        return True
+
+    except Exception as e:
+        print(f"[ERROR]: {e}")
+        return False
+
+
+
 def login_usuario():
     data = request.get_json()
 
@@ -80,13 +120,25 @@ def login_usuario():
         params = {'email': email}
         result = pull_data_db(query, params).first()
 
-        if not result or not checkpw(contrasenia.encode(), result[2].encode()):
+        if not result:
             return jsonify({'error': 'Email o contraseña incorrectos'}), 409
+
+        # Validar si la contraseña almacenada es válida
+        if not es_hash_valido(result[2]):
+         return jsonify({'error': 'Contraseña almacenada no válida. Contacte al administrador.'}), 500
+        
+        try:
+            if not checkpw(contrasenia.encode(), result[2].encode()):
+                return jsonify({'error': 'Email o contraseña incorrectos'}), 409
+        except ValueError as e:
+            print(f"[ERROR Contraseña no válida]: {e}")
+            return jsonify({'error': 'Contraseña almacenada no válida. Contacte al administrador.'}), 500
 
         token = str(uuid.uuid4())
         id_usuario = result[0]
-        admin_usuario = result[3]
+        admin_usuario = bool(result[3])  # Asegura que ADMIN sea booleano (True/False)
 
+        # Insertar token en la base de datos
         query2 = """ INSERT INTO TOKEN_USUARIO (TOKEN, ID_USUARIO)
                     VALUES (:token, :id_usuario); """
         params2 = {"token": token, "id_usuario": id_usuario}
@@ -95,6 +147,7 @@ def login_usuario():
         if not result2:
             return jsonify({'error': 'Error al subir el token a la base de datos'}), 401
 
+        # Retorna rol admin o usuario según corresponda
         return jsonify({
             'mensaje': 'Login exitoso',
             'token': token,
@@ -102,11 +155,12 @@ def login_usuario():
         }), 200
 
     except SQLAlchemyError as e:
-        print(f"[ERROR API /usuario/crear]: {e}")
+        print(f"[ERROR API /usuario/login]: {e}")
         return jsonify({'error': 'Error en la base de datos', 'detalle': str(e)}), 500
     except Exception as e:
-        print(f"[ERROR API /usuario/crear]: {e}")
-        return jsonify({'error': 'Error en la base de datos', 'detalle': str(e)}), 500
+        print(f"[ERROR API /usuario/login]: {e}")
+        return jsonify({'error': 'Error inesperado', 'detalle': str(e)}), 500
+
     
 def validar_token():
     token = request.cookies.get("token") or request.headers.get("Authorization", "").replace("Bearer ", "")

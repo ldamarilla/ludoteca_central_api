@@ -22,6 +22,6 @@ CREATE TABLE `TOKEN_USUARIO` (
   FOREIGN KEY (`ID_USUARIO`) REFERENCES `USUARIO`(`ID_USUARIO`)
 );
                                                                                          
-INSERT INTO `USUARIO`(NOMBRE,EMAIL,CONTRASENIA,ADMIN) VALUES ('Tomas','tomas@gmail.com','$2b$12$/FLj6EXvEaFfRgE3X3TTh.hYI2EqOhCV837q.GR6gh.QjYPhF/EOi', 1);
-INSERT INTO `USUARIO` (NOMBRE,EMAIL,CONTRASENIA,ADMIN) VALUES ('Santiago','Santiago@gmail.com','$2b$12$/FLj6EXvEaFfRgE3X3TTh.hYI2EqOhCV837q.GR6gh.QjYPhF/EOi',1);
+INSERT INTO `USUARIO`(NOMBRE,EMAIL,CONTRASENIA,ADMIN) VALUES ('Tomas','tomas@gmail.com','1234', 1);
+INSERT INTO `USUARIO` (NOMBRE,EMAIL,CONTRASENIA,ADMIN) VALUES ('Santiago','Santiago@gmail.com','1234',1);
 

@@ -1,40 +1,13 @@
 from base64 import b64decode, b64encode
 from flask import Flask, jsonify, request
-import usuario,db, uuid
+import usuario, uuid
 from config import DATABASE_URI
 
 app = Flask(__name__)
 
-# PRODUCTOS
-@app.route('/api/productos', methods=['GET', 'POST'])
-def productos():
-    if request.method == 'GET':
-        return db.get_productos()
-
-    if request.method == 'POST':
-        return db.add_producto()
-    return None
-
-@app.route('/api/productos/<id>', methods=['GET'])
-def get_product(id):
-    return db.get_producto(id)
-
-# CATEGORIAS
-@app.route('/api/categorias', methods=['GET', 'POST'])
-def categorias():
-    if request.method == 'GET':
-        return db.get_categorias()
-
-    if request.method == 'POST':
-        return db.add_categoria()
-    return None
-
-@app.route('/api/categorias/<id>', methods=['GET'])
-def get_categoria(id):
-    return db.get_categoria(id)
-
 
 #USUARIO
+
 @app.route('/api/usuario/crear', methods=['POST'])
 def crear_cuenta():
         return usuario.crear_cuenta()
@@ -46,6 +19,8 @@ def login_usuario():
 @app.route('/api/usuario/token', methods=['GET'])
 def validar_token():
     return usuario.validar_token()
+
+
 
 #MI CUENTA
 @app.route('/api/mi-cuenta/traer-datos', methods=['GET', 'POST'])
@@ -61,7 +36,7 @@ def eliminar_micuenta():
     return usuario.eliminar_micuenta()
 
 
-
+usuario.actualizar_contrasenias_no_hasheadas()
 
 if __name__ == '__main__':
     app.run(port=5050, debug=True)
