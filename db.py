@@ -305,3 +305,27 @@ def get_all_pedidos():
         "total": len(result),
         "pedidos": result
     }), 200
+
+def finalizar_compra():
+    data = request.get_json()
+    compra_id = data.get("compra_id")
+
+    if not compra_id:
+        return jsonify({"success": False, "message": "Falta el ID de compra"}), 404
+
+    
+    if not pull_data_db(f"SELECT 1 FROM COMPRAS WHERE ID = '{compra_id}' AND FINALIZADA = false;").first():
+        return jsonify({"success": False, "message": "Compra no encontrada."}), 404
+
+    #obtener productos de la compra
+    productos = pull_data_db(f"""
+        SELECT PRODUCTO_ID, CANTIDAD
+        FROM COMPRAS_PRODUCTOS
+        WHERE COMPRA_ID = '{compra_id}';
+    """)
+
+    #validar stock
+    for prod in productos:
+        stock = pull_data_db(f"SELECT STOCK FROM PRODUCTOS WHERE ID = '{prod.PRODUCTO_ID}';").first()
+        if not stock or stock.STOCK < prod.CANTIDAD:
+            return jsonify({"success": False, "message": f"Stock insuficiente para producto ID {prod.PRODUCTO_ID}"}), 400

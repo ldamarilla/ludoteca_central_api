@@ -66,11 +66,12 @@ def carrito():
     return None
 
 # PEDIDOS
-@app.route ('/api/pedidos')
-def get_all_pedidos ():
-    return db.get_all_pedidos()
-
-
+@app.route('/api/pedidos', methods=['GET', 'PATCH'])
+def pedidos():
+    if request.method == 'GET':
+        return db.get_all_pedidos()
+    if request.method == 'PATCH':
+        return db.finalizar_compra()
 
 # SERVER
 if __name__ == '__main__':
