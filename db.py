@@ -313,19 +313,36 @@ def finalizar_compra():
     if not compra_id:
         return jsonify({"success": False, "message": "Falta el ID de compra"}), 404
 
+    # Verifica que la compra exista y no este finalizada
+    compra = pull_data_db(
+        f"SELECT 1 FROM COMPRAS WHERE ID = '{compra_id}' AND FINALIZADA = false;").first()
     
-    if not pull_data_db(f"SELECT 1 FROM COMPRAS WHERE ID = '{compra_id}' AND FINALIZADA = false;").first():
-        return jsonify({"success": False, "message": "Compra no encontrada."}), 404
+    if not compra:
+        return jsonify({"success": False, "message": "Compra no encontrada o ya finalizada"}), 404
 
-    #obtener productos de la compra
-    productos = pull_data_db(f"""
-        SELECT PRODUCTO_ID, CANTIDAD
-        FROM COMPRAS_PRODUCTOS
-        WHERE COMPRA_ID = '{compra_id}';
-    """)
+    # Obtener productos del carrito
+    productos = pull_data_db(f"""SELECT PRODUCTO_ID, CANTIDAD
+                             FROM COMPRAS_PRODUCTOS WHERE COMPRA_ID = '{compra_id}';""").mappings().all()
 
-    #validar stock
+    #validar stock de todos los productos
     for prod in productos:
-        stock = pull_data_db(f"SELECT STOCK FROM PRODUCTOS WHERE ID = '{prod.PRODUCTO_ID}';").first()
-        if not stock or stock.STOCK < prod.CANTIDAD:
-            return jsonify({"success": False, "message": f"Stock insuficiente para producto ID {prod.PRODUCTO_ID}"}), 400
+        stock = pull_data_db(f"SELECT STOCK FROM PRODUCTOS WHERE ID = '{prod['PRODUCTO_ID']}';").first()
+
+        if not stock or stock[0] < prod["CANTIDAD"]:
+            return jsonify({"success": False, "message": f"Stock insuficiente para producto ID {prod['PRODUCTO_ID']}"}), 400   
+        
+    #Descontar stock de todos los productos
+    for prod in productos:
+        push_data_db(f"""UPDATE PRODUCTOS  SET STOCK = STOCK - {prod["CANTIDAD"]}
+                        WHERE ID  = '{ prod["PRODUCTO_ID"]}';""")
+
+    #Finalizar la compra
+    push_data_db (f"UPDATE COMPRAS SET FINALIZADA = true WHERE ID = '{compra_id}';")
+
+    #Registrar productos en PEDIDOS
+    for prod in productos:
+        push_data_db(f"""INSERT INTO PEDIDOS (PRODUCTO_ID, COMPRAS_ID)
+                     VALUES ('{prod["PRODUCTO_ID"]}', '{compra_id}');""")
+    
+    return jsonify({"success": True, "message": "COmpra finalizada exitosamente y productos registrados en PEDIDOS"}), 200
+
