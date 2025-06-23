@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 import uuid
 from bcrypt import hashpw, checkpw, gensalt
 from re import match
+import re
 
 
 
@@ -34,7 +35,7 @@ def modify_data_db(query, params=None):
     
 
 def es_hash_valido(contrasenia):
-    return match(r'^\$2[aby]?\$\d{2}\$[./A-Za-z0-9]{53}$', contrasenia) is not None
+    return isinstance(contrasenia, str) and bool(re.match(r'^\$2[abxy]\$.{56}$', contrasenia))
 
 #------------------------------Funciones de usuario-------------------------------------
 def crear_cuenta():
@@ -79,19 +80,18 @@ def actualizar_contrasenias_no_hasheadas():
         query_select = "SELECT ID_USUARIO, CONTRASENIA FROM USUARIO;"
         query_update = "UPDATE USUARIO SET CONTRASENIA = :nueva_contrasenia WHERE ID_USUARIO = :id_usuario;"
 
-        with engine.connect() as conn:
+        with engine.begin() as conn:  # Esto hace commit automático
             result = conn.execute(text(query_select))
 
             for row in result:
                 id_usuario = row[0]
                 contrasenia_actual = row[1]
 
-                # Si la contraseña no está hasheada
                 if not es_hash_valido(contrasenia_actual):
                     print(f"[INFO] Hasheando contraseña para ID_USUARIO: {id_usuario}")
+
                     nueva_contrasenia = hashpw(contrasenia_actual.encode(), gensalt()).decode()
 
-                    # Actualiza la contraseña
                     conn.execute(
                         text(query_update),
                         {'nueva_contrasenia': nueva_contrasenia, 'id_usuario': id_usuario}
