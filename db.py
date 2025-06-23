@@ -290,3 +290,18 @@ def delete_carrito_producto():
         return jsonify({'error': 'Error inesperado', 'detalle': str(e)}), 500
 
 
+# PEDIDOS
+
+def get_all_pedidos():
+    query = """
+        SELECT p.ID, c.FECHA, pr.NOMBRE AS PRODUCTO
+        FROM PEDIDOS p JOIN PRODUCTOS pr ON p.PRODUCTO_ID = pr.ID
+        JOIN COMPRAS c ON p.COMPRAS_ID = c.ID
+        ORDER BY c.FECHA DESC"""
+    result = pull_data_db(query).mappings().all()
+
+    return jsonify({
+        "success": True,
+        "total": len(result),
+        "pedidos": result
+    }), 200

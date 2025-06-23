@@ -65,6 +65,13 @@ def carrito():
 
     return None
 
+# PEDIDOS
+@app.route ('/api/pedidos')
+def get_all_pedidos ():
+    return db.get_all_pedidos()
+
+
+
 # SERVER
 if __name__ == '__main__':
     app.run(port=5070, debug=True)
