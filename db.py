@@ -180,18 +180,23 @@ def add_categoria():
 
 def add_producto_a_carrito():
     data = request.get_json()
-    validation_producto_result = (pull_data_db(f"""SELECT * FROM PRODUCTOS p WHERE id ='{data['producto_id']}';""")
+    validation_producto_result = (pull_data_db(f"""SELECT * FROM PRODUCTOS p WHERE ID ='{data['producto_id']}';""")
                                   .first())
 
     if not validation_producto_result: return jsonify({'error': 'Producto no hallado'}), 404
 
-    compra_en_progreso_query = "SELECT * FROM COMPRAS c WHERE FINALIZADA = false;"
+    compra_en_progreso_query = f"SELECT * FROM COMPRAS c WHERE FINALIZADA = false AND USUARIO_ID = '{data['usuario_id']}';"
     compra_en_progreso_result = pull_data_db(compra_en_progreso_query).first()
 
     if not compra_en_progreso_result:
        add_carrito_query = "INSERT INTO COMPRAS (FECHA, USUARIO_ID, FINALIZADA) VALUES (:fecha, :usuario_id, :finalizada);"
-       compra_params = { "fecha": datetime.now(), "usuario_id": get_usuario_logueado()['ID'], "finalizada": False }
+       compra_params = { "fecha": datetime.now(), "usuario_id": data['usuario_id'], "finalizada": False }
        push_data_db(add_carrito_query, compra_params)
+
+    validation_producto_unique_result = (
+        pull_data_db(f"""SELECT * FROM COMPRAS_PRODUCTOS cp WHERE PRODUCTO_ID ='{data['producto_id']}' AND COMPRA_ID ='{compra_en_progreso_result.ID}';""")
+        .first())
+    if validation_producto_unique_result: return jsonify({'error': 'Producto ya agregado al carrito'}), 422
 
     compra_en_progreso_result = pull_data_db(compra_en_progreso_query).first()
     add_producto_query = "INSERT INTO COMPRAS_PRODUCTOS (COMPRA_ID, PRODUCTO_ID, CANTIDAD) VALUES (:compra_id, :producto_id, :cantidad);"
@@ -209,9 +214,11 @@ def add_producto_a_carrito():
         return jsonify({'error': 'Error inesperado', 'detalle': str(e)}), 500
 
 def get_carrito():
+    data = request.args.to_dict()
     compra_en_progreso_query = f"""SELECT * FROM COMPRAS c 
                                 LEFT JOIN COMPRAS_PRODUCTOS cp on cp.COMPRA_ID = c.ID
-                                WHERE c.FINALIZADA = false;"""
+                                LEFT JOIN PRODUCTOS p on p.ID = cp.PRODUCTO_ID
+                                WHERE c.FINALIZADA = false AND USUARIO_ID = '{data['usuario_id']}';"""
     compra_en_progreso_results = pull_data_db(compra_en_progreso_query).fetchall()
 
     if not compra_en_progreso_results[0]:
@@ -223,13 +230,18 @@ def get_carrito():
     compra["fecha"] = compra_en_progreso_results[0].FECHA
     compra["usuario_id"] = compra_en_progreso_results[0].USUARIO_ID
 
-    compra["compra_productos"] = list()
+    compra["carrito_productos"] = list()
 
     for compra_prod in compra_en_progreso_results:
         compra_producto = dict()
         compra_producto["producto_id"] = compra_prod.PRODUCTO_ID
-        compra_producto["cantidad"] = compra_prod.CANTIDAD
-        compra["compra_productos"].append(compra_producto)
+        compra_producto["producto_nombre"] = compra_prod.NOMBRE
+        compra_producto["producto_precio"] = compra_prod.PRECIO
+        compra_producto["producto_stock"] = compra_prod.STOCK
+        compra_producto["producto_cantidad"] = compra_prod.CANTIDAD
+        compra_producto["producto_descripcion"] = compra_prod.DESCRIPCION
+        compra_producto["producto_imagen"] = compra_prod.IMAGEN
+        compra["carrito_productos"].append(compra_producto)
 
     return jsonify(compra)
 
