@@ -215,24 +215,30 @@ def add_producto_a_carrito():
 
 def get_carrito():
     data = request.args.to_dict()
-    compra_en_progreso_query = f"""SELECT * FROM COMPRAS c 
-                                LEFT JOIN COMPRAS_PRODUCTOS cp on cp.COMPRA_ID = c.ID
-                                LEFT JOIN PRODUCTOS p on p.ID = cp.PRODUCTO_ID
+    carrito_producto_query = f"""SELECT * FROM COMPRAS c 
+                                INNER JOIN COMPRAS_PRODUCTOS cp on cp.COMPRA_ID = c.ID
+                                INNER JOIN PRODUCTOS p on p.ID = cp.PRODUCTO_ID
                                 WHERE c.FINALIZADA = false AND USUARIO_ID = '{data['usuario_id']}';"""
-    compra_en_progreso_results = pull_data_db(compra_en_progreso_query).fetchall()
+    carrito_producto_results = pull_data_db(carrito_producto_query).fetchall()
 
-    if not compra_en_progreso_results[0]:
-        return jsonify({'error': 'Carrito no creado'}), 404
+    carrito_query = f"""SELECT * FROM COMPRAS WHERE FINALIZADA = false AND USUARIO_ID = '{data['usuario_id']}';"""
+    carrito_result = pull_data_db(carrito_producto_query).first()
+
+    if not carrito_result:
+        add_carrito_query = "INSERT INTO COMPRAS (FECHA, USUARIO_ID, FINALIZADA) VALUES (:fecha, :usuario_id, :finalizada);"
+        compra_params = {"fecha": datetime.now(), "usuario_id": data['usuario_id'], "finalizada": False}
+        push_data_db(add_carrito_query, compra_params)
+        carrito_result = pull_data_db(carrito_query).first()
 
     compra = dict()
 
-    compra["id"] = compra_en_progreso_results[0].ID
-    compra["fecha"] = compra_en_progreso_results[0].FECHA
-    compra["usuario_id"] = compra_en_progreso_results[0].USUARIO_ID
+    compra["id"] = carrito_result.ID
+    compra["fecha"] = carrito_result.FECHA
+    compra["usuario_id"] = carrito_result.USUARIO_ID
 
     compra["carrito_productos"] = list()
 
-    for compra_prod in compra_en_progreso_results:
+    for compra_prod in carrito_producto_results:
         compra_producto = dict()
         compra_producto["producto_id"] = compra_prod.PRODUCTO_ID
         compra_producto["producto_nombre"] = compra_prod.NOMBRE
@@ -245,54 +251,26 @@ def get_carrito():
 
     return jsonify(compra)
 
-def update_cantidad_producto_carrito():
+def delete_carrito_producto(producto_id):
     data = request.get_json()
-    validation_producto_result = (pull_data_db(f"""SELECT * FROM PRODUCTOS p WHERE id ='{data['producto_id']}';""")
-                                  .first())
-
-    if not validation_producto_result:
-        return jsonify({'error': 'Producto no hallado'}), 404
-
-    validation_compra_producto_query = f"""SELECT cp.ID AS ID FROM COMPRAS_PRODUCTOS cp
-                                JOIN COMPRAS c ON c.id=cp.COMPRA_ID
-                                WHERE c.FINALIZADA=false AND cp.PRODUCTO_ID='{data["producto_id"]}';"""
-    validation_compra_producto_result = pull_data_db(validation_compra_producto_query).first()
-
-    if not validation_compra_producto_result:
-        return jsonify({'error': 'Producto no hallado en el carrito'}), 404
-
-    query = f"""UPDATE COMPRAS_PRODUCTOS SET cantidad='{data["cantidad"]}' WHERE ID ='{validation_compra_producto_result.ID}';"""
-
-    try:
-        push_data_db(query)
-        return jsonify({'message': 'Actualización de stock ejecutada correctamente'}), 200
-
-    except Exception as e:
-        return jsonify({'error': 'Error inesperado', 'detalle': str(e)}), 500
-
-def get_usuario_logueado(): #mock, está harcodeado ahora
-    usuario =  {
-        "ID": 1
-    }
-    return usuario
-
-def delete_carrito_producto():
-    data = request.get_json()
-    validation_producto_result = (pull_data_db(f"""SELECT * FROM PRODUCTOS p WHERE id ='{data['producto_id']}';""")
+    usuario_id = data['usuario_id']
+    validation_producto_result = (pull_data_db(f"""SELECT * FROM PRODUCTOS p WHERE ID ='{producto_id}';""")
                                   .first())
 
     if not validation_producto_result:
         return jsonify({'error': 'Producto inexistente'}), 404
 
     validation_compra_producto_query = f"""SELECT cp.ID AS ID FROM COMPRAS_PRODUCTOS cp
-                                    JOIN COMPRAS c ON c.id=cp.COMPRA_ID
-                                    WHERE c.FINALIZADA=false AND cp.PRODUCTO_ID='{data["producto_id"]}';"""
+                                    JOIN COMPRAS c ON c.ID=cp.COMPRA_ID
+                                    WHERE c.FINALIZADA=false AND cp.PRODUCTO_ID='{producto_id}' AND c.USUARIO_ID='{usuario_id}';"""
     validation_compra_producto_result = pull_data_db(validation_compra_producto_query).first()
 
     if not validation_compra_producto_result:
-        return jsonify({'error': 'Producto a eliminar no hallado en el carrito'}), 404
+        return jsonify({'error': 'Producto a eliminar no hallado en el carrito'}), 400
 
-    query = f"""DELETE FROM COMPRAS_PRODUCTOS WHERE PRODUCTO_ID='{data["producto_id"]}';"""
+    query = f"""DELETE cp FROM COMPRAS_PRODUCTOS cp
+            JOIN COMPRAS c ON c.ID=cp.COMPRA_ID
+            WHERE c.FINALIZADA=false AND cp.PRODUCTO_ID='{producto_id}' AND c.USUARIO_ID='{usuario_id}';"""
 
     try:
         push_data_db(query)
@@ -301,4 +279,15 @@ def delete_carrito_producto():
     except Exception as e:
         return jsonify({'error': 'Error inesperado', 'detalle': str(e)}), 500
 
+def delete_carrito():
+    data = request.get_json()
+    print(data)
+    query = f"""DELETE FROM COMPRAS WHERE USUARIO_ID='{data["usuario_id"]}' AND FINALIZADA=false;"""
+
+    try:
+        push_data_db(query)
+        return jsonify({'message': 'Eliminación de carrito y todos sus productos ejecutada correctamente'}), 200
+
+    except Exception as e:
+        return jsonify({'error': 'Error inesperado', 'detalle': str(e)}), 500
 
