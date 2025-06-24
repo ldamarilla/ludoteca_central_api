@@ -1,6 +1,7 @@
 from base64 import b64decode, b64encode
 from flask import Flask, jsonify, request
-import db,usuario,uuid
+import db, usuario, admin
+import uuid
 from config import DATABASE_URI
 
 app = Flask(__name__)
@@ -109,11 +110,19 @@ def cerrar_sesion():
 def eliminar_micuenta():
     return usuario.eliminar_micuenta()
 
-
 usuario.actualizar_contrasenias_no_hasheadas()
+
+#ADMIN
+@app.route('/api/admin/pedidos', methods=['GET', 'POST'])
+def obtener_pedidos():
+    return admin.traer_pedidos()
 
 
 
 # SERVER
 if __name__ == '__main__':
+    print("Rutas activas:")
+    for rule in app.url_map.iter_rules():
+        print(f"{rule.endpoint:25s} → {rule.rule}")
+
     app.run(port=5070, debug=True)
