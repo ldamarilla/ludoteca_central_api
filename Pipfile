@@ -25,6 +25,7 @@ typing-extensions = "*"
 urllib3 = "*"
 virtualenv = "*"
 werkzeug = "*"
+bcrypt = "*"
 
 [dev-packages]
 
