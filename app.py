@@ -49,7 +49,7 @@ def get_categoria(id):
 def get_productos_by_categoria(id):
     return db.get_productos_by_categoria(id)
 
-@app.route('/api/carrito', methods=['GET', 'POST', 'PATCH', 'DELETE'])
+@app.route('/api/carrito', methods=['GET', 'POST', 'DELETE'])
 def carrito():
     if request.method == 'GET':
         return db.get_carrito()
@@ -57,11 +57,8 @@ def carrito():
     if request.method == 'POST':
         return db.add_producto_a_carrito()
 
-    if request.method == 'PATCH':
-        return db.update_cantidad_producto_carrito()
-
     if request.method == 'DELETE':
-        return db.delete_carrito_producto()
+        return db.delete_carrito()
 
     return None
 
@@ -71,6 +68,7 @@ def carrito_producto(producto_id):
         return db.delete_carrito_producto(producto_id)
     return None
 
+
 # PEDIDOS
 @app.route('/api/pedidos', methods=['GET', 'PATCH'])
 def pedidos():
@@ -78,9 +76,6 @@ def pedidos():
         return db.get_all_pedidos()
     if request.method == 'PATCH':
         return db.finalizar_compra()
-
-
-
 
 # SERVER
 if __name__ == '__main__':
