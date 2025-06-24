@@ -101,6 +101,10 @@ def datos_micuenta():
 def actualizar_micuenta():
     return usuario.actualizar_micuenta()
 
+@app.route('/api/mi-cuenta/cerrar-sesion', methods=['GET', 'POST'])
+def cerrar_sesion():
+    return usuario.cerrar_sesion()
+
 @app.route('/api/mi-cuenta/eliminar', methods=['GET', 'DELETE', 'POST'])
 def eliminar_micuenta():
     return usuario.eliminar_micuenta()

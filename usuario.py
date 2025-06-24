@@ -33,7 +33,6 @@ def modify_data_db(query, params=None):
             return conn.execute(text(query), params)
         return conn.execute(text(query))
     
-
 def es_hash_valido(contrasenia):
     return isinstance(contrasenia, str) and bool(re.match(r'^\$2[abxy]\$.{56}$', contrasenia))
 
@@ -74,7 +73,6 @@ def crear_cuenta():
         print(f"[ERROR API /usuario/crear]: {e}")
         return jsonify({'error': 'Error en la base de datos', 'detalle': str(e)}), 500
 
-
 def actualizar_contrasenias_no_hasheadas():
     try:
         query_select = "SELECT ID_USUARIO, CONTRASENIA FROM USUARIO;"
@@ -101,10 +99,8 @@ def actualizar_contrasenias_no_hasheadas():
         return True
 
     except Exception as e:
-        print(f"[ERROR]: {e}")
+        print(f"[ERROR API /actualizar_contrasenias]: {e}")
         return False
-
-
 
 def login_usuario():
     data = request.get_json()
@@ -160,7 +156,6 @@ def login_usuario():
     except Exception as e:
         print(f"[ERROR API /usuario/login]: {e}")
         return jsonify({'error': 'Error inesperado', 'detalle': str(e)}), 500
-
     
 def validar_token():
     token = request.cookies.get("token") or request.headers.get("Authorization", "").replace("Bearer ", "")
@@ -208,7 +203,7 @@ def datos_micuenta():
         return jsonify(data_usuario), 200
     
     except Exception as e:
-        print(f"[ERROR API /mi-cuenta/traer-datos]: {e}")
+        print(f"[ERROR API /mi-cuenta/datos_micuenta]: {e}")
         return jsonify({'error': 'Error inesperado'}), 500
 
 def actualizar_micuenta():
@@ -250,8 +245,28 @@ def actualizar_micuenta():
         return jsonify({'mensaje': 'Datos del usuario actualizados correctamente.'}), 200
 
     except Exception as e:
-        print(f"[ERROR API /mi-cuenta/actualizar]: {e}")
+        print(f"[ERROR API /mi-cuenta/actualizar_micuenta]: {e}")
         return jsonify({'error': 'Error inesperado', 'detalle': str(e)}), 500
+
+def cerrar_sesion():
+    usuario_id = validar_token()
+    if not usuario_id:  
+        return jsonify({"error": "Error al traer los datos"}), 401
+
+    try:
+        query = "DELETE FROM TOKEN_USUARIO WHERE ID_USUARIO = :id;"
+        params = {'id': usuario_id}
+
+        result = modify_data_db(query, params)
+        if not result:
+            return jsonify({'error': 'No fue posible cerrar la sesion'}), 400
+        return jsonify({'mensaje': 'sesion cerrada'}), 200
+
+    except Exception as e:
+        print(f"[ERROR API /mi-cuenta/cerrar_sesion]: {e}")
+        return jsonify({'error': 'Ha sucedido un error inesperado', 'detalle': str(e)}), 500
+
+    return jsonify({'error': 'Error inesperado'}), 500
 
 def eliminar_micuenta():
     usuario_id = validar_token()
