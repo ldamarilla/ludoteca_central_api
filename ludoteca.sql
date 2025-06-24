@@ -24,6 +24,7 @@ CREATE TABLE `PRODUCTOS` (
         REFERENCES `CATEGORIAS` (`ID`)
         ON DELETE SET NULL
 );
+
 #COMPRAS
 CREATE TABLE `COMPRAS` (
   `ID` int NOT NULL AUTO_INCREMENT,
@@ -110,4 +111,15 @@ INSERT INTO `PRODUCTOS` (`NOMBRE`,`PRECIO`,`STOCK`,`DESCRIPCION`,`CATEGORIA_ID`,
 ('Backgammon', 2199, null, 'azar y estrategia', 7, 'images/backgammon.jpeg'),
 ('Scrabble', 3200, null, 'Forma palabras para ganar', 6, 'images/scrabble.jpeg');
 
+INSERT INTO COMPRAS (FECHA, USUARIO_ID, FINALIZADA) VALUES
+(NOW(), 1, TRUE),
+(NOW(), 2, TRUE),
+(NOW(), 3, TRUE);
 
+INSERT INTO COMPRAS_PRODUCTOS (PRODUCTO_ID, CANTIDAD, COMPRA_ID) VALUES
+(1, 2, 1), (4, 1, 1), (2, 3, 2),
+(5, 1, 3), (7, 2, 3);
+
+INSERT INTO PEDIDOS (PRODUCTO_ID, COMPRAS_ID) VALUES
+(1, 1), (4, 1), (2, 2),
+(5, 3), (7, 3);
