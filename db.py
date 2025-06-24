@@ -180,19 +180,16 @@ def add_categoria():
 
 # PEDIDOS
 
-def get_all_pedidos():
-    query = """
-        SELECT p.ID, c.FECHA, pr.NOMBRE AS PRODUCTO
-        FROM PEDIDOS p JOIN PRODUCTOS pr ON p.PRODUCTO_ID = pr.ID
-        JOIN COMPRAS c ON p.COMPRAS_ID = c.ID
-        ORDER BY c.FECHA DESC"""
-    result = pull_data_db(query).mappings().all()
+def get_pedidos_por_usuario(usuario_id):
+    query = "SELECT p.ID, c.FECHA, pr.NOMBRE AS PRODUCTO FROM PEDIDOS p JOIN PRODUCTOS pr ON p.PRODUCTO_ID = pr.ID JOIN COMPRAS c ON p.COMPRAS_ID = c.ID WHERE p.USUARIO_ID = :usuario_id ORDER BY c.FECHA DESC"
+
+    result = pull_data_db(query, {'usuario_id': usuario_id}).mappings().all()
 
     return jsonify({
         "success": True,
         "total": len(result),
         "pedidos": result
-    }), 200
+    }),200
 
 def finalizar_compra():
     data = request.get_json()
