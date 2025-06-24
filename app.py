@@ -49,13 +49,16 @@ def get_categoria(id):
 def get_productos_by_categoria(id):
     return db.get_productos_by_categoria(id)
 
-@app.route('/api/carrito', methods=['GET', 'POST', 'DELETE'])
+@app.route('/api/carrito', methods=['GET', 'POST', 'PATCH', 'DELETE'])
 def carrito():
     if request.method == 'GET':
         return db.get_carrito()
 
     if request.method == 'POST':
         return db.add_producto_a_carrito()
+
+    if request.method == 'PATCH':
+        return db.update_cantidad_producto_carrito()
 
     if request.method == 'DELETE':
         return db.delete_carrito()
