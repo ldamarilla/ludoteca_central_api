@@ -68,6 +68,15 @@ def carrito_producto(producto_id):
         return db.delete_carrito_producto(producto_id)
     return None
 
+
+# PEDIDOS
+@app.route('/api/pedidos', methods=['GET', 'PATCH'])
+def pedidos():
+    if request.method == 'GET':
+        return db.get_all_pedidos()
+    if request.method == 'PATCH':
+        return db.finalizar_compra()
+
 # SERVER
 if __name__ == '__main__':
     app.run(port=5070, debug=True)
