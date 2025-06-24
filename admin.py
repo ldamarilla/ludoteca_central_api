@@ -14,7 +14,7 @@ def traer_pedidos():
     usuario_id = usuario.validar_token()
     if not usuario_id:
         return jsonify({'error': 'Token invalido o no proporcionado'}), 401
-   try:
+    try:
         query = """
         SELECT 
             PEDIDOS.ID,
@@ -22,7 +22,7 @@ def traer_pedidos():
             COMPRAS.USUARIO_ID,
             USUARIO.NOMBRE,
             COMPRAS_PRODUCTOS.ID,
-            COMPRAS_PRODUCTOS.NOMBRE,
+            PRODUCTOS.NOMBRE,
             COMPRAS_PRODUCTOS.CANTIDAD
 
         FROM PEDIDOS
@@ -30,7 +30,8 @@ def traer_pedidos():
         JOIN COMPRAS ON PEDIDOS.COMPRAS_ID = COMPRAS.ID
         JOIN USUARIO ON COMPRAS.USUARIO_ID = USUARIO.ID_USUARIO
         JOIN COMPRAS_PRODUCTOS ON COMPRAS_PRODUCTOS.COMPRA_ID = COMPRAS.ID
-        JOIN PRODUCTOS ON COMPRAS_PRODUCTOS.PRODUCTO_ID = COMPRAS_PRODUCTOS.ID
+        JOIN PRODUCTOS ON COMPRAS_PRODUCTOS.PRODUCTO_ID = PRODUCTOS.ID
+
         """
         filas = usuario.pull_data_db(query).fetchall()
 
@@ -40,22 +41,31 @@ def traer_pedidos():
         pedidos = {}
 
         for row in filas:
-            pid = row.pedido_id
-            if pid not in pedidos:
-                pedidos[pid] = {
-                    'pedido_id': pid,
-                    'compra_id': row.compra_id,
-                    'usuario_id': row.USUARIO_ID,
-                    'nombre_usuario': row.nombre_usuario,
+            pedido_id = row[0]         
+            compra_id = row[1]         
+            usuario_id = row[2]        
+            nombre_usuario = row[3]    
+            producto_id = row[4]       
+            producto_nombre = row[5]   
+            cantidad = row[6]        
+
+            if pedido_id not in pedidos:
+                pedidos[pedido_id] = {
+                    'pedido_id': pedido_id,
+                    'compra_id': compra_id,
+                    'usuario_id': usuario_id,
+                    'nombre_usuario': nombre_usuario,
                     'productos': []
                 }
-            pedidos[pid]['productos'].append({
-                'producto_id': row.producto_id,
-                'producto_nombre': row.producto_nombre,
-                'cantidad': row.CANTIDAD
+
+            pedidos[pedido_id]['productos'].append({
+                'producto_id': producto_id,
+                'producto_nombre': producto_nombre,
+                'cantidad': cantidad
             })
 
-        return jsonify(pedidos_dict), 200
+
+        return jsonify(pedidos), 200
 
     except Exception as e:
         print(f"[ERROR API /admin/mostrar-pedidos]: {e}")
