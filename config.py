@@ -1,3 +1,3 @@
 DATABASE = 'ludoteca'
 
-DATABASE_URI = f'mysql+mysqlconnector://root:root@localhost:3306/{DATABASE}'
+DATABASE_URI = f'mysql+mysqlconnector://admin:password@localhost:3306/{DATABASE}'
