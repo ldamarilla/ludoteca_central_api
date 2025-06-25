@@ -1,5 +1,4 @@
-from base64 import b64decode, b64encode
-from flask import Flask, jsonify, request
+from flask import Flask, request
 import db
 
 from config import DATABASE_URI
