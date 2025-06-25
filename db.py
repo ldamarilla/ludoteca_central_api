@@ -3,6 +3,7 @@ from sqlalchemy import text, create_engine
 from datetime import datetime
 from config import DATABASE_URI
 engine = create_engine(DATABASE_URI)
+import usuario
 
 def pull_data_db(query):
     with engine.connect() as conn:
@@ -180,17 +181,23 @@ def add_categoria():
 
 def add_producto_a_carrito():
     data = request.get_json()
+    cantidad = 1
+    usuario_id = usuario.validar_token()
+
+    if not usuario_id:
+        return jsonify({'error': 'Usuario no autenticado'}), 403
+
     validation_producto_result = (pull_data_db(f"""SELECT * FROM PRODUCTOS p WHERE ID ='{data['producto_id']}';""")
                                   .first())
 
     if not validation_producto_result: return jsonify({'error': 'Producto no hallado'}), 404
 
-    compra_en_progreso_query = f"SELECT * FROM COMPRAS c WHERE FINALIZADA = false AND USUARIO_ID = '{data['usuario_id']}';"
+    compra_en_progreso_query = f"SELECT * FROM COMPRAS c WHERE FINALIZADA = false AND USUARIO_ID = '{usuario_id}';"
     compra_en_progreso_result = pull_data_db(compra_en_progreso_query).first()
 
     if not compra_en_progreso_result:
        add_carrito_query = "INSERT INTO COMPRAS (FECHA, USUARIO_ID, FINALIZADA) VALUES (:fecha, :usuario_id, :finalizada);"
-       compra_params = { "fecha": datetime.now(), "usuario_id": data['usuario_id'], "finalizada": False }
+       compra_params = { "fecha": datetime.now(), "usuario_id": usuario_id, "finalizada": False }
        push_data_db(add_carrito_query, compra_params)
 
     validation_producto_unique_result = (
@@ -203,7 +210,7 @@ def add_producto_a_carrito():
     prod_params = {
         "compra_id": compra_en_progreso_result.ID,
         "producto_id": data["producto_id"],
-        "cantidad": data["cantidad"]
+        "cantidad": cantidad
     }
 
     try:
@@ -214,19 +221,23 @@ def add_producto_a_carrito():
         return jsonify({'error': 'Error inesperado', 'detalle': str(e)}), 500
 
 def get_carrito():
-    data = request.args.to_dict()
+    usuario_id = usuario.validar_token()
+
+    if not usuario_id:
+        return jsonify({'error': 'Usuario no autenticado'}), 403
+
     carrito_producto_query = f"""SELECT * FROM COMPRAS c 
                                 INNER JOIN COMPRAS_PRODUCTOS cp on cp.COMPRA_ID = c.ID
                                 INNER JOIN PRODUCTOS p on p.ID = cp.PRODUCTO_ID
-                                WHERE c.FINALIZADA = false AND USUARIO_ID = '{data['usuario_id']}';"""
+                                WHERE c.FINALIZADA = false AND USUARIO_ID = '{usuario_id}';"""
     carrito_producto_results = pull_data_db(carrito_producto_query).fetchall()
 
-    carrito_query = f"""SELECT * FROM COMPRAS WHERE FINALIZADA = false AND USUARIO_ID = '{data['usuario_id']}';"""
+    carrito_query = f"""SELECT * FROM COMPRAS WHERE FINALIZADA = false AND USUARIO_ID = '{usuario_id}';"""
     carrito_result = pull_data_db(carrito_query).first()
 
     if not carrito_result:
         add_carrito_query = "INSERT INTO COMPRAS (FECHA, USUARIO_ID, FINALIZADA) VALUES (:fecha, :usuario_id, :finalizada);"
-        compra_params = {"fecha": datetime.now(), "usuario_id": data['usuario_id'], "finalizada": False}
+        compra_params = {"fecha": datetime.now(), "usuario_id": usuario_id, "finalizada": False}
         push_data_db(add_carrito_query, compra_params)
         carrito_result = pull_data_db(carrito_query).first()
 
@@ -253,6 +264,11 @@ def get_carrito():
 
 def update_cantidad_producto_carrito():
     data = request.get_json()
+    usuario_id = usuario.validar_token()
+
+    if not usuario_id:
+        return jsonify({'error': 'Usuario no autenticado'}), 403
+
     validation_producto_result = (pull_data_db(f"""SELECT * FROM PRODUCTOS p WHERE id ='{data['producto_id']}';""")
                                   .first())
 
@@ -261,7 +277,7 @@ def update_cantidad_producto_carrito():
 
     validation_compra_producto_query = f"""SELECT cp.ID AS ID FROM COMPRAS_PRODUCTOS cp
                                 JOIN COMPRAS c ON c.id=cp.COMPRA_ID
-                                WHERE c.FINALIZADA=false AND cp.PRODUCTO_ID='{data["producto_id"]}' AND c.USUARIO_ID='{data["usuario_id"]}';"""
+                                WHERE c.FINALIZADA=false AND cp.PRODUCTO_ID='{data["producto_id"]}' AND c.USUARIO_ID='{usuario_id}';"""
     validation_compra_producto_result = pull_data_db(validation_compra_producto_query).first()
 
     if not validation_compra_producto_result:
@@ -278,8 +294,11 @@ def update_cantidad_producto_carrito():
 
 
 def delete_carrito_producto(producto_id):
-    data = request.get_json()
-    usuario_id = data['usuario_id']
+    usuario_id = usuario.validar_token()
+
+    if not usuario_id:
+        return jsonify({'error': 'Usuario no autenticado'}), 403
+
     validation_producto_result = (pull_data_db(f"""SELECT * FROM PRODUCTOS p WHERE ID ='{producto_id}';""")
                                   .first())
 
@@ -306,9 +325,12 @@ def delete_carrito_producto(producto_id):
         return jsonify({'error': 'Error inesperado', 'detalle': str(e)}), 500
 
 def delete_carrito():
-    data = request.get_json()
-    print(data)
-    query = f"""DELETE FROM COMPRAS WHERE USUARIO_ID='{data["usuario_id"]}' AND FINALIZADA=false;"""
+    usuario_id = usuario.validar_token()
+
+    if not usuario_id:
+        return jsonify({'error': 'Usuario no autenticado'}), 403
+
+    query = f"""DELETE FROM COMPRAS WHERE USUARIO_ID='{usuario_id}' AND FINALIZADA=false;"""
 
     try:
         push_data_db(query)
