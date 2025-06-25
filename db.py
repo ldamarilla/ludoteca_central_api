@@ -94,7 +94,7 @@ def add_producto():
         
         if not categoria_result:
             return jsonify({'error': 'Categoría no encontrada'}), 404
-
+        
         # Insertar producto
         query = """
             INSERT INTO PRODUCTOS 
@@ -106,11 +106,10 @@ def add_producto():
         
         params = {
             "nombre": data["nombre"],
-            "precio": data["precio"],
-            "stock": data["stock"],
+            "precio": float(data["precio"]),
+            "stock": int(data["stock"]),
             "descripcion": data.get("descripcion", ""),
-            "categoria_id": data["categoria_id"],
-            "imagen_url": data.get("imagen_url", "")
+            "categoria_id": int(data["categoria_id"]),
         }
         
         result = pull_data_db(query, params).first()
@@ -118,15 +117,15 @@ def add_producto():
         
         return jsonify({
             'message': 'Producto creado correctamente',
-            'producto_id': producto_id
+            'producto_id': producto_id,
+            'status': 'success'
         }), 201
 
     except Exception as e:
         return jsonify({
-            'error': 'Error al crear producto',
-            'detalle': str(e)
+            'error': str(e),
+            'status': 'error'
         }), 500
-
 
 def update_stock_producto(id, cantidad):
     validation_producto_query = f"""SELECT ID FROM PRODUCTOS p WHERE ID ='{id}';"""
