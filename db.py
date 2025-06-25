@@ -78,31 +78,55 @@ def get_productos_by_categoria(id):
         products.append(product)
     return jsonify(products), 200
 
+
 def add_producto():
     data = request.get_json()
-    validation_categoria_query = f"""SELECT ID FROM CATEGORIAS p WHERE id ='{data['categoria_id']}';"""
-    validation_categoria_result = pull_data_db(validation_categoria_query).first()
-
-    if not validation_categoria_result:
-        return jsonify({'error': 'Categoría no hallada'}), 404
-
-    query = ("INSERT INTO PRODUCTOS (NOMBRE, PRECIO, STOCK, DESCRIPCION, CATEGORIA_ID) "
-             "VALUES (:nombre, :precio, :stock, :descripcion, :categoria_id);")
-
-    params = {
-        "nombre": data["nombre"],
-        "precio": data["precio"],
-        "stock": data["stock"],
-        "descripcion": data["descripcion"],
-        "categoria_id": data["categoria_id"]
-    }
-
+    
+    # Validaciones básicas
+    required_fields = ['nombre', 'precio', 'stock', 'categoria_id']
+    if not all(field in data for field in required_fields):
+        return jsonify({'error': 'Faltan campos obligatorios'}), 400
+    
     try:
-        push_data_db(query, params)
-        return jsonify({'message': 'Producto creado correctamente'}), 201
+        # Validar categoría
+        categoria_query = "SELECT ID FROM CATEGORIAS WHERE id = :categoria_id;"
+        categoria_result = pull_data_db(categoria_query, {"categoria_id": data['categoria_id']}).first()
+        
+        if not categoria_result:
+            return jsonify({'error': 'Categoría no encontrada'}), 404
+
+        # Insertar producto
+        query = """
+            INSERT INTO PRODUCTOS 
+            (NOMBRE, PRECIO, STOCK, DESCRIPCION, CATEGORIA_ID, IMAGEN) 
+            VALUES 
+            (:nombre, :precio, :stock, :descripcion, :categoria_id, :imagen_url)
+            RETURNING ID;
+        """
+        
+        params = {
+            "nombre": data["nombre"],
+            "precio": data["precio"],
+            "stock": data["stock"],
+            "descripcion": data.get("descripcion", ""),
+            "categoria_id": data["categoria_id"],
+            "imagen_url": data.get("imagen_url", "")
+        }
+        
+        result = pull_data_db(query, params).first()
+        producto_id = result[0]
+        
+        return jsonify({
+            'message': 'Producto creado correctamente',
+            'producto_id': producto_id
+        }), 201
 
     except Exception as e:
-        return jsonify({'error': 'Error inesperado', 'detalle': str(e)}), 500
+        return jsonify({
+            'error': 'Error al crear producto',
+            'detalle': str(e)
+        }), 500
+
 
 def update_stock_producto(id, cantidad):
     validation_producto_query = f"""SELECT ID FROM PRODUCTOS p WHERE ID ='{id}';"""
