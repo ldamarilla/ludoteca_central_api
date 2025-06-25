@@ -6,9 +6,10 @@ from config import DATABASE_URI
 engine = create_engine(DATABASE_URI)
 import usuario
 
-def pull_data_db(query):
+def pull_data_db(query, params=None):
     with engine.connect() as conn:
-        return conn.execute(text(query))
+        result = conn.execute(text(query), params or {})
+        return result
 
 def push_data_db(query, data = None):
     with (engine.connect() as conn):
@@ -181,15 +182,23 @@ def add_categoria():
 # PEDIDOS
 
 def get_pedidos_por_usuario(usuario_id):
-    query = "SELECT p.ID, c.FECHA, pr.NOMBRE AS PRODUCTO FROM PEDIDOS p JOIN PRODUCTOS pr ON p.PRODUCTO_ID = pr.ID JOIN COMPRAS c ON p.COMPRAS_ID = c.ID WHERE p.USUARIO_ID = :usuario_id ORDER BY c.FECHA DESC"
+    query = """SELECT p.ID, c.FECHA, pr.NOMBRE AS PRODUCTO FROM PEDIDOS p JOIN PRODUCTOS pr 
+        ON p.PRODUCTO_ID = pr.ID JOIN COMPRAS c ON p.COMPRAS_ID = c.ID 
+        WHERE p.USUARIO_ID = :usuario_id ORDER BY c.FECHA DESC"""
 
-    result = pull_data_db(query, {'usuario_id': usuario_id}).mappings().all()
+    try:
+        result = pull_data_db(query, {'usuario_id': usuario_id}).mappings().all()
 
-    return jsonify({
-        "success": True,
-        "total": len(result),
-        "pedidos": result
-    }),200
+        pedidos = [dict(row) for row in result]  # ✅ Convertimos RowMapping a dict
+
+        return jsonify({
+            "success": True,
+            "total": len(pedidos),
+            "pedidos": pedidos
+        }), 200
+    except Exception as e:
+        print("error al traer pedidos", e)
+        return jsonify ({"success": False, "message":"error interno"}), 500
 
 def finalizar_compra():
     data = request.get_json()
