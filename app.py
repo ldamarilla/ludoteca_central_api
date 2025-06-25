@@ -1,6 +1,7 @@
-from base64 import b64decode, b64encode
-from flask import Flask, jsonify, request
-import db, usuario, admin
+from flask import Flask, request
+import db
+
+from config import DATABASE_URI
 
 app = Flask(__name__)
 
@@ -47,16 +48,13 @@ def get_categoria(id):
 def get_productos_by_categoria(id):
     return db.get_productos_by_categoria(id)
 
-@app.route('/api/carrito', methods=['GET', 'POST', 'PATCH', 'DELETE'])
+@app.route('/api/carrito', methods=['GET', 'POST', 'DELETE'])
 def carrito():
     if request.method == 'GET':
         return db.get_carrito()
 
     if request.method == 'POST':
         return db.add_producto_a_carrito()
-
-    if request.method == 'PATCH':
-        return db.update_cantidad_producto_carrito()
 
     if request.method == 'DELETE':
         return db.delete_carrito()
@@ -71,6 +69,10 @@ def carrito_producto(producto_id):
 
 
 # PEDIDOS
+@app.route('/api/pedidos/usuario/<usuario_id>', methods=['GET'])
+def pedidos_usuario(usuario_id):
+    return db.get_pedidos_por_usuario(usuario_id)
+
 @app.route('/api/pedidos', methods=['GET', 'PATCH'])
 def pedidos():
     if request.method == 'GET':
@@ -78,52 +80,6 @@ def pedidos():
     if request.method == 'PATCH':
         return db.finalizar_compra()
 
-#USUARIO
-
-@app.route('/api/usuario/crear', methods=['POST'])
-def crear_cuenta():
-        return usuario.crear_cuenta()
-
-@app.route('/api/usuario/login', methods=['POST'])
-def login_usuario():
-    return usuario.login_usuario()
-
-@app.route('/api/usuario/token', methods=['GET'])
-def validar_token():
-    return usuario.validar_token()
-
-
-
-#MI CUENTA
-@app.route('/api/mi-cuenta/traer-datos', methods=['GET', 'POST'])
-def datos_micuenta():
-    return usuario.datos_micuenta()
-
-@app.route('/api/mi-cuenta/actualizar', methods=['GET','PATCH', 'POST'])
-def actualizar_micuenta():
-    return usuario.actualizar_micuenta()
-
-@app.route('/api/mi-cuenta/cerrar-sesion', methods=['GET', 'POST'])
-def cerrar_sesion():
-    return usuario.cerrar_sesion()
-
-@app.route('/api/mi-cuenta/eliminar', methods=['GET', 'DELETE', 'POST'])
-def eliminar_micuenta():
-    return usuario.eliminar_micuenta()
-
-usuario.actualizar_contrasenias_no_hasheadas()
-
-#ADMIN
-@app.route('/api/admin/pedidos', methods=['GET', 'POST'])
-def obtener_pedidos():
-    return admin.traer_pedidos()
-
-
-
 # SERVER
 if __name__ == '__main__':
-    print("Rutas activas:")
-    for rule in app.url_map.iter_rules():
-        print(f"{rule.endpoint:25s} → {rule.rule}")
-
     app.run(port=5070, debug=True)

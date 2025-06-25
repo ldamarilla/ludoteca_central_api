@@ -2,12 +2,14 @@ from flask import Flask, jsonify, request
 from sqlalchemy import text, create_engine
 from datetime import datetime
 from config import DATABASE_URI
+
 engine = create_engine(DATABASE_URI)
 import usuario
 
-def pull_data_db(query):
+def pull_data_db(query, params=None):
     with engine.connect() as conn:
-        return conn.execute(text(query))
+        result = conn.execute(text(query), params or {})
+        return result
 
 def push_data_db(query, data = None):
     with (engine.connect() as conn):
@@ -177,6 +179,80 @@ def add_categoria():
     except Exception as e:
         return jsonify({'error': 'Error inesperado', 'detalle': str(e)}), 500
 
+# PEDIDOS
+
+def get_pedidos_por_usuario(usuario_id):
+    query = """SELECT p.ID, c.FECHA, pr.NOMBRE AS PRODUCTO FROM PEDIDOS p JOIN PRODUCTOS pr 
+        ON p.PRODUCTO_ID = pr.ID JOIN COMPRAS c ON p.COMPRAS_ID = c.ID 
+        WHERE p.USUARIO_ID = :usuario_id ORDER BY c.FECHA DESC"""
+
+    try:
+        result = pull_data_db(query, {'usuario_id': usuario_id}).mappings().all()
+
+        pedidos = [dict(row) for row in result]  # ✅ Convertimos RowMapping a dict
+
+        return jsonify({
+            "success": True,
+            "total": len(pedidos),
+            "pedidos": pedidos
+        }), 200
+    except Exception as e:
+        print("error al traer pedidos", e)
+        return jsonify ({"success": False, "message":"error interno"}), 500
+
+def finalizar_compra():
+    data = request.get_json()
+    compra_id = data.get("compra_id")
+
+    if not compra_id:
+        return jsonify({"success": False, "message": "Falta el ID de compra"}), 404
+    
+    # Obtener el usuario
+    usuario_query = "SELECT USUARIO_ID FROM COMPRAS WHERE ID = :compra_id"
+    usuario_id = pull_data_db(usuario_query, {"compra_id": compra_id}).first()
+
+    if not usuario_id:
+        return jsonify({"success":False, "message": "Usuario no encontrado"}),404
+    
+    # Verifica que la compra exista y no este finalizada
+    compra_query = "SELECT 1 FROM COMPRAS WHERE ID = :compra_id AND FINALIZADA = false"
+    compra = pull_data_db(
+        compra_query, {"compra_id": compra_id}).first()
+    
+    if not compra:
+        return jsonify({"success": False, "message": "Compra no encontrada o ya finalizada"}), 404
+
+    # Obtener productos del carrito
+    productos_query = "SELECT PRODUCTO_ID, CANTIDAD FROM COMPRAS_PRODUCTOS WHERE COMPRA_ID = :compra_id"
+    productos = pull_data_db(productos_query, {"compra_id": compra_id}).mappings().all()
+
+    #validar stock de todos los productos
+    for prod in productos:
+        stock_query = "SELECT STOCK FROM PRODUCTOS WHERE ID = :producto_id"
+        stock = pull_data_db(stock_query,{"producto_id": prod['PRODUCTO_ID']}).first()
+
+        if not stock or stock[0] < prod["CANTIDAD"]:
+            return jsonify({"success": False, "message": f"Stock insuficiente para producto ID {prod['PRODUCTO_ID']}"}), 400   
+        
+    #Descontar stock de todos los productos
+    for prod in productos:
+        update_stock_query = "UPDATE PRODUCTOS SET STOCK = STOCK - :cantidad WHERE ID = :producto_id"
+        push_data_db(update_stock_query,{"cantidad": prod["CANTIDAD"],"producto_id": prod["PRODUCTO_ID"]})
+
+    #Finalizar la compra
+    push_data_db ("UPDATE COMPRAS SET FINALIZADA = true WHERE ID = :compra_id", {"compra_id": compra_id})
+
+    #Registrar productos en PEDIDOS
+    for prod in productos:
+        insert_pedido_query = "INSERT INTO PEDIDOS(PRODUCTO_ID, COMPRAS_ID, USUARIO_ID) VALUES( :producto_id, :compra_id, :usuario_id)"
+        push_data_db(insert_pedido_query,{
+            "producto_id": prod["PRODUCTO_ID"],
+            "compra_id": compra_id,
+            "usuario_id": usuario_id[0]
+        })
+    
+    return jsonify({"success": True, "message": "COmpra finalizada exitosamente y productos registrados en PEDIDOS"}), 200
+
 #CARRITO
 
 def add_producto_a_carrito():
@@ -338,60 +414,4 @@ def delete_carrito():
 
     except Exception as e:
         return jsonify({'error': 'Error inesperado', 'detalle': str(e)}), 500
-
-# PEDIDOS
-
-def get_all_pedidos():
-    query = """
-        SELECT p.ID, c.FECHA, pr.NOMBRE AS PRODUCTO
-        FROM PEDIDOS p JOIN PRODUCTOS pr ON p.PRODUCTO_ID = pr.ID
-        JOIN COMPRAS c ON p.COMPRAS_ID = c.ID
-        ORDER BY c.FECHA DESC"""
-    result = pull_data_db(query).mappings().all()
-
-    return jsonify({
-        "success": True,
-        "total": len(result),
-        "pedidos": result
-    }), 200
-
-def finalizar_compra():
-    data = request.get_json()
-    compra_id = data.get("compra_id")
-
-    if not compra_id:
-        return jsonify({"success": False, "message": "Falta el ID de compra"}), 404
-
-    # Verifica que la compra exista y no este finalizada
-    compra = pull_data_db(
-        f"SELECT 1 FROM COMPRAS WHERE ID = '{compra_id}' AND FINALIZADA = false;").first()
-    
-    if not compra:
-        return jsonify({"success": False, "message": "Compra no encontrada o ya finalizada"}), 404
-
-    # Obtener productos del carrito
-    productos = pull_data_db(f"""SELECT PRODUCTO_ID, CANTIDAD
-                             FROM COMPRAS_PRODUCTOS WHERE COMPRA_ID = '{compra_id}';""").mappings().all()
-
-    #validar stock de todos los productos
-    for prod in productos:
-        stock = pull_data_db(f"SELECT STOCK FROM PRODUCTOS WHERE ID = '{prod['PRODUCTO_ID']}';").first()
-
-        if not stock or stock[0] < prod["CANTIDAD"]:
-            return jsonify({"success": False, "message": f"Stock insuficiente para producto ID {prod['PRODUCTO_ID']}"}), 400   
-        
-    #Descontar stock de todos los productos
-    for prod in productos:
-        push_data_db(f"""UPDATE PRODUCTOS  SET STOCK = STOCK - {prod["CANTIDAD"]}
-                        WHERE ID  = '{ prod["PRODUCTO_ID"]}';""")
-
-    #Finalizar la compra
-    push_data_db (f"UPDATE COMPRAS SET FINALIZADA = true WHERE ID = '{compra_id}';")
-
-    #Registrar productos en PEDIDOS
-    for prod in productos:
-        push_data_db(f"""INSERT INTO PEDIDOS (PRODUCTO_ID, COMPRAS_ID)
-                     VALUES ('{prod["PRODUCTO_ID"]}', '{compra_id}');""")
-    
-    return jsonify({"success": True, "message": "COmpra finalizada exitosamente y productos registrados en PEDIDOS"}), 200
 
