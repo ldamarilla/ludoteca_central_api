@@ -1,8 +1,6 @@
 from base64 import b64decode, b64encode
 from flask import Flask, jsonify, request
 import db, usuario, admin
-import uuid
-from config import DATABASE_URI
 
 app = Flask(__name__)
 
