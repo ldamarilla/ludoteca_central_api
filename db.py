@@ -222,7 +222,7 @@ def get_carrito():
     carrito_producto_results = pull_data_db(carrito_producto_query).fetchall()
 
     carrito_query = f"""SELECT * FROM COMPRAS WHERE FINALIZADA = false AND USUARIO_ID = '{data['usuario_id']}';"""
-    carrito_result = pull_data_db(carrito_producto_query).first()
+    carrito_result = pull_data_db(carrito_query).first()
 
     if not carrito_result:
         add_carrito_query = "INSERT INTO COMPRAS (FECHA, USUARIO_ID, FINALIZADA) VALUES (:fecha, :usuario_id, :finalizada);"
