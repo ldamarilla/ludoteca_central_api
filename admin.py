@@ -98,6 +98,50 @@ def traer_pedidos():
         print(f"[ERROR API /admin/mostrar-pedidos]: {e}")
         return jsonify({'error': 'Error inesperado'}), 500
     
+def traer_productos():
+    usuario_id = usuario.validar_token()
+    if not usuario_id:
+        return jsonify({'error': 'Token inválido o no proporcionado'}), 401
+
+    try:
+        query = """
+            SELECT 
+                PRODUCTOS.ID,
+                PRODUCTOS.NOMBRE,
+                PRODUCTOS.PRECIO,
+                PRODUCTOS.STOCK,
+                PRODUCTOS.DESCRIPCION,
+                PRODUCTOS.IMAGEN,
+                CATEGORIAS.ID AS CATEGORIA_ID,
+                CATEGORIAS.NOMBRE AS CATEGORIA_NOMBRE
+            FROM PRODUCTOS
+            LEFT JOIN CATEGORIAS ON PRODUCTOS.CATEGORIA_ID = CATEGORIAS.ID
+        """
+        filas = usuario.pull_data_db(query).fetchall()
+
+        if not filas:
+            return jsonify({'error': 'No hay productos cargados'}), 404
+
+        productos = []
+
+        for row in filas:
+            producto = {
+                'id': row[0],
+                'nombre': row[1],
+                'precio': row[2] if row[3] is not None else 0,
+                'stock': row[3] if row[3] is not None else 0,
+                'descripcion': row[4],
+                'imagen': row[5],  # base64 o ruta, según cómo lo guardes
+                'categoria_id': row[6],
+                'categoria_nombre': row[7]
+            }
+            productos.append(producto)
+
+        return jsonify(productos), 200
+
+    except Exception as e:
+        print(f"[ERROR API /admin/productos]: {e}")
+        return jsonify({'error': 'Error inesperado'}), 500
 
 def crear_producto():
     usuario_id = usuario.validar_token()  # Usario estaba mal escrito
@@ -149,6 +193,10 @@ def crear_producto():
     }), 201
 
 
+
+
+
+
 #EDITAR
 def actualizar_producto():
     try:
@@ -189,12 +237,7 @@ def actualizar_producto():
     except Exception as e:
         print(f"[ERROR API /admin/productos/actualizar_producto]: {e}")
         return jsonify({'error': 'Error inesperado', 'detalle': str(e)}), 500
-    
-
-
-
 #ELIMINAR
-
 def eliminar_producto():
     try:
         data = request.get_json()

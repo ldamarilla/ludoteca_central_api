@@ -118,6 +118,9 @@ usuario.actualizar_contrasenias_no_hasheadas()
 def obtener_pedidos():
     return admin.traer_pedidos()
 
+@app.route('/api/admin/productos', methods=['GET', 'POST'])
+def obtener_productos():
+    return admin.traer_productos()
 
 @app.route('/api/admin/productos/agregar', methods=['POST','PUT','DELETE'])
 def cargar_productos():
