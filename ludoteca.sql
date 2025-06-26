@@ -98,28 +98,18 @@ INSERT INTO `CATEGORIAS` (`NOMBRE`) VALUES
 ('Estrategia');
 
 INSERT INTO `PRODUCTOS` (`NOMBRE`,`PRECIO`,`STOCK`,`DESCRIPCION`,`CATEGORIA_ID`, `IMAGEN`) VALUES 
-('TEG', 4000, NULL, 'Juego de estrategia por turnos de partidas de larga duracion', 4, 'images/teg.jpeg'),
-('Ajedrez', 2500, NULL, 'El clásico juego de mesa etcetc', 7, 'images/ajedrez.jpeg'),
-('Monopoly', 3000, NULL, 'Ideal familia blablabla', 2, 'images/monopoly.png'),
-('D&D', 5000, NULL, 'Partidas largas de rol etcecte', 5, 'images/dnd.jpeg'),
-('4 en linea', 1500, NULL, 'hundir barcos y tal', 7, 'images/4linea.jpeg'),
-('UNO', 1000, NULL, 'para perder amistades y fragmentar a tu familia', 2, 'images/uno.jpeg'),
-('Pictionary', 3500, NULL, 'Juego de dibujo familiar', 2, 'images/pictionary.jpeg'),
-('Carrera de mente', 2000, NULL, 'Preguntas desafiantasnda', 6, 'images/carreramente.jpeg'),
-('Damas', 2250, NULL, 'clasico etctec', 7, 'images/damas.png'),
-('Ludo', 1750, NULL, 'juego de familia muy familiar', 2, 'images/ludo.jpeg'),
-('Backgammon', 2199, NULL, 'azar y estrategia', 7, 'images/backgammon.jpeg'),
-('Scrabble', 3200, NULL, 'Forma palabras para ganar', 6, 'images/scrabble.jpeg');
+('TEG', 4000, 10, 'Juego de estrategia por turnos de partidas de larga duracion', 4, 'images/teg.jpeg'),
+('Ajedrez', 2500, 10, 'El clásico juego de mesa etcetc', 7, 'images/ajedrez.jpeg'),
+('Monopoly', 3000, 10, 'Ideal familia blablabla', 2, 'images/monopoly.png'),
+('D&D', 5000, 10, 'Partidas largas de rol etcecte', 5, 'images/dnd.jpeg'),
+('4 en linea', 1500, 10, 'hundir barcos y tal', 7, 'images/4linea.jpeg'),
+('UNO', 1000, 10, 'para perder amistades y fragmentar a tu familia', 2, 'images/uno.jpeg'),
+('Pictionary', 3500, 10, 'Juego de dibujo familiar', 2, 'images/pictionary.jpeg'),
+('Carrera de mente', 2000, 10, 'Preguntas desafiantasnda', 6, 'images/carreramente.jpeg'),
+('Damas', 2250, 10, 'clasico etctec', 7, 'images/damas.png'),
+('Ludo', 1750, 10, 'juego de familia muy familiar', 2, 'images/ludo.jpeg'),
+('Backgammon', 2199, 10, 'azar y estrategia', 7, 'images/backgammon.jpeg'),
+('Scrabble', 3200, 10, 'Forma palabras para ganar', 6, 'images/scrabble.jpeg');
 
-INSERT INTO COMPRAS (FECHA, USUARIO_ID, FINALIZADA) VALUES
-(NOW(), 1, TRUE),
-(NOW(), 2, TRUE),
-(NOW(), 3, TRUE);
 
-INSERT INTO COMPRAS_PRODUCTOS (PRODUCTO_ID, CANTIDAD, COMPRA_ID) VALUES
-(1, 2, 1), (4, 1, 1), (2, 3, 2),
-(5, 1, 3), (7, 2, 3);
 
-INSERT INTO PEDIDOS (PRODUCTO_ID, COMPRAS_ID, USUARIO_ID) VALUES
-(1, 1, 1), (4, 1, 1), (2, 2, 2),
-(5, 3, 3), (7, 3, 3);

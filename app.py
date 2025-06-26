@@ -119,7 +119,6 @@ usuario.actualizar_contrasenias_no_hasheadas()
 #ADMIN
 @app.route('/api/admin/pedidos', methods=['GET', 'POST'])
 def obtener_pedidos():
-    print("Ruta /api/admin/pedidos llamada")
     return admin.traer_pedidos()
 
 @app.route('/api/admin/productos', methods=['GET', 'POST'])
@@ -132,7 +131,11 @@ def eliminar_producto_seleccionado(producto_id):
 
 @app.route('/api/admin/productos/agregar', methods=['POST','PUT','DELETE'])
 def cargar_productos():
-      return admin.crear_producto()
+    return admin.crear_producto()
+
+@app.route('/api/admin/productos/editar/<int:producto_id>', methods=['GET', 'POST'])
+def actualizar_datos_producto(producto_id):
+    return admin.actualizar_producto(producto_id)
 
 
 # SERVER

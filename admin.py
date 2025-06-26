@@ -207,67 +207,59 @@ def crear_producto():
         }
     }), 201
 
+def actualizar_producto(producto_id):
+    usuario_id = usuario.validar_token()
+    if not usuario_id:
+        return jsonify({'error': 'Token inválido'}), 401
 
+    imagen = request.files.get('imagen')
+    if not imagen or imagen.filename == '':
+        return jsonify({'error': 'No se proporcionó imagen'}), 400
 
-#EDITAR
-def actualizar_producto():
+    filename = secure_filename(imagen.filename)
+    ext = filename.rsplit('.', 1)[-1].lower()
+    if ext not in ALLOWED_EXTENSIONS:
+        return jsonify({'error': 'Tipo de archivo no permitido'}), 400
+
+    image_b64 = base64.b64encode(imagen.read()).decode('utf-8')
+
     try:
-        data = request.get_json()
-        producto_id = data.get("producto_id")
-        if not producto_id:
-            return jsonify({'error': 'El ID del producto es obligatorio'}), 400
-
-        columnas_map = {
-            "nombre_producto": "NOMBRE",
-            "precio": "PRECIO",
-            "stock": "STOCK",
-            "descripcion": "DESCRIPCION",
-            "categoria_id": "CATEGORIA_ID"
+        producto_data = {
+            'id':            producto_id,
+            'nombre':        request.form.get('nombre'),
+            'precio':        float(request.form.get('precio')),
+            'stock':         int(request.form.get('stock')),
+            'descripcion':   request.form.get('descripcion', ''),
+            'categoria_id':  int(request.form.get('categoria_id')),
+            'imagen':        image_b64
         }
-
-
-        params = {k: v for k, v in data.items() if k in columnas_map and v is not None}
-        params["producto_id"] = producto_id
-
-        if len(params) <= 1:  
-            return jsonify({'error': 'No se proporcionaron datos para actualizar'}), 400
-
-        set_clause = ", ".join([f"{columnas_map[key]} = :{key}" for key in params if key != "producto_id"])
-
-        query = f"""
-        UPDATE PRODUCTOS
-        SET {set_clause}
-        WHERE ID = :producto_id;
-        """
-
-        result = modify_data_db(query, params)
-        if result.rowcount == 0:
-            return jsonify({'error': 'El producto no existe o no se pudo actualizar'}), 404
-
-        return jsonify({'mensaje': 'Producto actualizado correctamente'}), 200
-
-    except Exception as e:
-        print(f"[ERROR API /admin/productos/actualizar_producto]: {e}")
-        return jsonify({'error': 'Error inesperado', 'detalle': str(e)}), 500
+    except (KeyError, ValueError) as e:
+        return jsonify({'error': f'Datos inválidos: {e}'}), 400
 
     try:
-        data = request.get_json()
-        producto_id = data.get('producto_id')  # O cambia según cómo recibas el id
-
-        if not producto_id:
-            return jsonify({'error': 'El ID del producto es obligatorio'}), 400
-
-        query = "DELETE FROM PRODUCTOS WHERE ID = :producto_id;"
-        params = {'producto_id': producto_id}
-
-        result = modify_data_db(query, params)
-        if result.rowcount == 0:
-            return jsonify({'error': 'No fue posible eliminar el producto correctamente'}), 400
-
-        return jsonify({'mensaje': 'Producto eliminado correctamente'}), 200
+        query =""" 
+                UPDATE PRODUCTOS
+                SET NOMBRE = :nombre,
+                    PRECIO = :precio,
+                    STOCK = :stock,
+                    DESCRIPCION = :descripcion,
+                    CATEGORIA_ID = :categoria_id,
+                    IMAGEN = :imagen
+                WHERE ID = :id;
+                """
+        result = modify_data_db(query, producto_data)  
+        if result:
+            return jsonify({'mensaje': 'Producto actualizado'}), 200
 
     except Exception as e:
-        print(f"[ERROR API /admin/productos/eliminar_producto]: {e}")
-        return jsonify({'error': 'Ha sucedido un error inesperado', 'detalle': str(e)}), 500
+        return jsonify({'error': str(e)}), 400
+
+
+
+
+
+
+
+
 
     
