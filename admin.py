@@ -3,11 +3,13 @@ from sqlalchemy import text, create_engine
 from sqlalchemy.exc import SQLAlchemyError
 from config import DATABASE_URI
 from datetime import datetime, timedelta
+from werkzeug.utils import secure_filename
 import uuid
 import usuario
 from bcrypt import hashpw, checkpw, gensalt
 from re import match
 import re
+import base64
 
 engine = create_engine(DATABASE_URI)
 
@@ -32,13 +34,7 @@ def modify_data_db(query, params=None):
             return conn.execute(text(query), params)
         return conn.execute(text(query))
 
-
-
-
-
-
-
-
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 #PEDIDOS
 def traer_pedidos():
@@ -103,51 +99,55 @@ def traer_pedidos():
         return jsonify({'error': 'Error inesperado'}), 500
     
 
-#CARGAR
+def crear_producto():
+    usuario_id = usuario.validar_token()  # Usario estaba mal escrito
 
-def cargar_productos():
+    if not usuario_id:
+        return jsonify({'error': 'Token inválido'}), 403
+
+    imagen = request.files.get('imagen')
+    if not imagen or imagen.filename == '':
+        return jsonify({'error': 'No se proporcionó imagen'}), 400
+
+    filename = secure_filename(imagen.filename)
+    ext = filename.rsplit('.', 1)[-1].lower()
+    if ext not in ALLOWED_EXTENSIONS:
+        return jsonify({'error': 'Tipo de archivo no permitido'}), 400
+
+    image_b64 = base64.b64encode(imagen.read()).decode('utf-8')
+
     try:
-        # Obtener datos del request
-        data = request.get_json()
-        nombre_producto = data.get("nombre_producto")
-        precio = data.get("precio")
-        stock = data.get("stock")
-        descripcion = data.get("descripcion")
-        categoria_id = data.get("categoria_id")
-
-        # Validar datos obligatorios
-        if not all([nombre_producto, precio, stock, descripcion, categoria_id]):
-            return jsonify({'error': 'Faltan datos obligatorios'}), 400
-
-        # Verificar que la categoría exista
-        categoria_query = "SELECT COUNT(*) FROM CATEGORIAS WHERE ID = :categoria_id;"
-        categoria_result = pull_data_db(categoria_query, {"categoria_id": categoria_id}).scalar()
-
-        if categoria_result == 0:
-            return jsonify({'error': f'La categoría con ID {categoria_id} no existe'}), 400
-
-        # Insertar el producto en la base de datos
-        insert_query = """
-        INSERT INTO PRODUCTOS (NOMBRE, PRECIO, STOCK, DESCRIPCION, CATEGORIA_ID)
-        VALUES (:nombre_producto, :precio, :stock, :descripcion, :categoria_id);
-        """
-        insert_params = {
-            "nombre_producto": nombre_producto,
-            "precio": precio,
-            "stock": stock,
-            "descripcion": descripcion,
-            "categoria_id": categoria_id
+        producto_data = {
+            'nombre':        request.form.get('nombre'),
+            'precio':        float(request.form.get('precio')),
+            'stock':         int(request.form.get('stock')),
+            'descripcion':   request.form.get('descripcion', ''),
+            'categoria_id':  int(request.form.get('categoria_id')),
+            'imagen':        image_b64
         }
-        push_data_db(insert_query, insert_params)
+    except (KeyError, ValueError) as e:
+        return jsonify({'error': f'Datos inválidos: {e}'}), 400
 
-        return jsonify({'mensaje': 'Producto agregado con éxito'}), 201
-
+    try:
+        query = """
+            INSERT INTO PRODUCTOS
+                (NOMBRE, PRECIO, STOCK, DESCRIPCION, CATEGORIA_ID, IMAGEN)
+            VALUES (:nombre, :precio, :stock, :descripcion, :categoria_id, :imagen)
+        """
+        result = modify_data_db(query, producto_data)
+        producto_id = result.lastrowid
     except Exception as e:
-        # Manejo de errores generales
-        print(f"[ERROR]: {e}")
-        return jsonify({'error': str(e)}), 500
+        print(f"[ERROR API /admin/productos/agregar]: {e}")
+        return jsonify({'error': 'Error inesperado'}), 500
 
-    
+    return jsonify({
+        'producto_nuevo': producto_data,
+        'imagen': {
+            'nombre': filename,
+            'base64': image_b64
+        }
+    }), 201
+
 
 #EDITAR
 def actualizar_producto():
