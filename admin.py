@@ -9,6 +9,37 @@ from bcrypt import hashpw, checkpw, gensalt
 from re import match
 import re
 
+engine = create_engine(DATABASE_URI)
+
+
+def pull_data_db(query, params=None):
+    with engine.connect() as conn:
+        if params:
+            return conn.execute(text(query), params)
+        return conn.execute(text(query))
+
+def push_data_db(query, data = None):
+    with (engine.connect() as conn):
+        conn.execute(
+            text(query),
+            data
+        )
+        conn.commit()
+
+def modify_data_db(query, params=None):
+    with engine.begin() as conn:  
+        if params:
+            return conn.execute(text(query), params)
+        return conn.execute(text(query))
+
+
+
+
+
+
+
+
+
 #PEDIDOS
 def traer_pedidos():
     usuario_id = usuario.validar_token()
@@ -70,3 +101,119 @@ def traer_pedidos():
     except Exception as e:
         print(f"[ERROR API /admin/mostrar-pedidos]: {e}")
         return jsonify({'error': 'Error inesperado'}), 500
+    
+
+#CARGAR
+
+def cargar_productos():
+    try:
+        # Obtener datos del request
+        data = request.get_json()
+        nombre_producto = data.get("nombre_producto")
+        precio = data.get("precio")
+        stock = data.get("stock")
+        descripcion = data.get("descripcion")
+        categoria_id = data.get("categoria_id")
+
+        # Validar datos obligatorios
+        if not all([nombre_producto, precio, stock, descripcion, categoria_id]):
+            return jsonify({'error': 'Faltan datos obligatorios'}), 400
+
+        # Verificar que la categoría exista
+        categoria_query = "SELECT COUNT(*) FROM CATEGORIAS WHERE ID = :categoria_id;"
+        categoria_result = pull_data_db(categoria_query, {"categoria_id": categoria_id}).scalar()
+
+        if categoria_result == 0:
+            return jsonify({'error': f'La categoría con ID {categoria_id} no existe'}), 400
+
+        # Insertar el producto en la base de datos
+        insert_query = """
+        INSERT INTO PRODUCTOS (NOMBRE, PRECIO, STOCK, DESCRIPCION, CATEGORIA_ID)
+        VALUES (:nombre_producto, :precio, :stock, :descripcion, :categoria_id);
+        """
+        insert_params = {
+            "nombre_producto": nombre_producto,
+            "precio": precio,
+            "stock": stock,
+            "descripcion": descripcion,
+            "categoria_id": categoria_id
+        }
+        push_data_db(insert_query, insert_params)
+
+        return jsonify({'mensaje': 'Producto agregado con éxito'}), 201
+
+    except Exception as e:
+        # Manejo de errores generales
+        print(f"[ERROR]: {e}")
+        return jsonify({'error': str(e)}), 500
+
+    
+
+#EDITAR
+def actualizar_producto():
+    try:
+        data = request.get_json()
+        producto_id = data.get("producto_id")
+        if not producto_id:
+            return jsonify({'error': 'El ID del producto es obligatorio'}), 400
+
+        columnas_map = {
+            "nombre_producto": "NOMBRE",
+            "precio": "PRECIO",
+            "stock": "STOCK",
+            "descripcion": "DESCRIPCION",
+            "categoria_id": "CATEGORIA_ID"
+        }
+
+
+        params = {k: v for k, v in data.items() if k in columnas_map and v is not None}
+        params["producto_id"] = producto_id
+
+        if len(params) <= 1:  
+            return jsonify({'error': 'No se proporcionaron datos para actualizar'}), 400
+
+        set_clause = ", ".join([f"{columnas_map[key]} = :{key}" for key in params if key != "producto_id"])
+
+        query = f"""
+        UPDATE PRODUCTOS
+        SET {set_clause}
+        WHERE ID = :producto_id;
+        """
+
+        result = modify_data_db(query, params)
+        if result.rowcount == 0:
+            return jsonify({'error': 'El producto no existe o no se pudo actualizar'}), 404
+
+        return jsonify({'mensaje': 'Producto actualizado correctamente'}), 200
+
+    except Exception as e:
+        print(f"[ERROR API /admin/productos/actualizar_producto]: {e}")
+        return jsonify({'error': 'Error inesperado', 'detalle': str(e)}), 500
+    
+
+
+
+#ELIMINAR
+
+def eliminar_producto():
+    try:
+        data = request.get_json()
+        producto_id = data.get('producto_id')  # O cambia según cómo recibas el id
+
+        if not producto_id:
+            return jsonify({'error': 'El ID del producto es obligatorio'}), 400
+
+        query = "DELETE FROM PRODUCTOS WHERE ID = :producto_id;"
+        params = {'producto_id': producto_id}
+
+        result = modify_data_db(query, params)
+        if result.rowcount == 0:
+            return jsonify({'error': 'No fue posible eliminar el producto correctamente'}), 400
+
+        return jsonify({'mensaje': 'Producto eliminado correctamente'}), 200
+
+    except Exception as e:
+        print(f"[ERROR API /admin/productos/eliminar_producto]: {e}")
+        return jsonify({'error': 'Ha sucedido un error inesperado', 'detalle': str(e)}), 500
+
+    

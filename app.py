@@ -119,6 +119,16 @@ def obtener_pedidos():
     return admin.traer_pedidos()
 
 
+@app.route('/api/admin/productos', methods=['POST','PUT','DELETE'])
+def cargar_productos():
+      if request.method == 'POST':
+          return admin.cargar_productos()
+      if request.method == 'PUT':
+        return admin.actualizar_producto()
+      if request.method == 'DELETE':
+        return admin.eliminar_producto()
+
+
 
 # SERVER
 if __name__ == '__main__':
