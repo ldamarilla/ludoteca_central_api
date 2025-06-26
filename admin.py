@@ -43,24 +43,23 @@ def traer_pedidos():
         return jsonify({'error': 'Token invalido o no proporcionado'}), 401
     try:
         query = """
-        SELECT 
-            PEDIDOS.ID,
-            COMPRAS.ID,
-            COMPRAS.USUARIO_ID,
-            USUARIO.NOMBRE,
-            COMPRAS_PRODUCTOS.ID,
-            PRODUCTOS.NOMBRE,
-            COMPRAS_PRODUCTOS.CANTIDAD
-
-        FROM PEDIDOS
-
-        JOIN COMPRAS ON PEDIDOS.COMPRAS_ID = COMPRAS.ID
-        JOIN USUARIO ON COMPRAS.USUARIO_ID = USUARIO.ID_USUARIO
-        JOIN COMPRAS_PRODUCTOS ON COMPRAS_PRODUCTOS.COMPRA_ID = COMPRAS.ID
-        JOIN PRODUCTOS ON COMPRAS_PRODUCTOS.PRODUCTO_ID = PRODUCTOS.ID
-
-        """
+                SELECT 
+                    PEDIDOS.ID,
+                    COMPRAS.ID,
+                    COMPRAS.USUARIO_ID,
+                    USUARIO.NOMBRE,
+                    COMPRAS_PRODUCTOS.ID,
+                    PRODUCTOS.NOMBRE,
+                    COMPRAS_PRODUCTOS.CANTIDAD
+                FROM PEDIDOS
+                JOIN COMPRAS ON PEDIDOS.COMPRAS_ID = COMPRAS.ID
+                JOIN USUARIO ON COMPRAS.USUARIO_ID = USUARIO.ID_USUARIO
+                JOIN COMPRAS_PRODUCTOS ON COMPRAS_PRODUCTOS.COMPRA_ID = COMPRAS.ID
+                                    AND COMPRAS_PRODUCTOS.PRODUCTO_ID = PEDIDOS.PRODUCTO_ID
+                JOIN PRODUCTOS ON COMPRAS_PRODUCTOS.PRODUCTO_ID = PRODUCTOS.ID
+            """
         filas = usuario.pull_data_db(query).fetchall()
+        print(f"Filas obtenidas: {len(filas)}")
 
         if not filas:
             return jsonify({'error': 'No hay pedidos'}), 404
@@ -143,11 +142,27 @@ def traer_productos():
         print(f"[ERROR API /admin/productos]: {e}")
         return jsonify({'error': 'Error inesperado'}), 500
 
+def eliminar_producto(producto_id):
+    usuario_id = usuario.validar_token()
+    if not usuario_id:
+        return jsonify({'error': 'Token inválido'}), 401
+
+    try:
+        query = "DELETE FROM PRODUCTOS WHERE ID = :id;"
+        params = {'id': producto_id}
+
+        result = modify_data_db(query, params)  
+        if result:
+            return jsonify({'mensaje': 'Producto eliminado'}), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+    
 def crear_producto():
-    usuario_id = usuario.validar_token()  # Usario estaba mal escrito
+    usuario_id = usuario.validar_token()
 
     if not usuario_id:
-        return jsonify({'error': 'Token inválido'}), 403
+        return jsonify({'error': 'Token inválido'}), 401
 
     imagen = request.files.get('imagen')
     if not imagen or imagen.filename == '':
@@ -194,9 +209,6 @@ def crear_producto():
 
 
 
-
-
-
 #EDITAR
 def actualizar_producto():
     try:
@@ -237,8 +249,7 @@ def actualizar_producto():
     except Exception as e:
         print(f"[ERROR API /admin/productos/actualizar_producto]: {e}")
         return jsonify({'error': 'Error inesperado', 'detalle': str(e)}), 500
-#ELIMINAR
-def eliminar_producto():
+
     try:
         data = request.get_json()
         producto_id = data.get('producto_id')  # O cambia según cómo recibas el id
