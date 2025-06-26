@@ -3,11 +3,38 @@ from sqlalchemy import text, create_engine
 from sqlalchemy.exc import SQLAlchemyError
 from config import DATABASE_URI
 from datetime import datetime, timedelta
+from werkzeug.utils import secure_filename
 import uuid
 import usuario
 from bcrypt import hashpw, checkpw, gensalt
 from re import match
 import re
+import base64
+
+engine = create_engine(DATABASE_URI)
+
+
+def pull_data_db(query, params=None):
+    with engine.connect() as conn:
+        if params:
+            return conn.execute(text(query), params)
+        return conn.execute(text(query))
+
+def push_data_db(query, data = None):
+    with (engine.connect() as conn):
+        conn.execute(
+            text(query),
+            data
+        )
+        conn.commit()
+
+def modify_data_db(query, params=None):
+    with engine.begin() as conn:  
+        if params:
+            return conn.execute(text(query), params)
+        return conn.execute(text(query))
+
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 #PEDIDOS
 def traer_pedidos():
@@ -16,24 +43,23 @@ def traer_pedidos():
         return jsonify({'error': 'Token invalido o no proporcionado'}), 401
     try:
         query = """
-        SELECT 
-            PEDIDOS.ID,
-            COMPRAS.ID,
-            COMPRAS.USUARIO_ID,
-            USUARIO.NOMBRE,
-            COMPRAS_PRODUCTOS.ID,
-            PRODUCTOS.NOMBRE,
-            COMPRAS_PRODUCTOS.CANTIDAD
-
-        FROM PEDIDOS
-
-        JOIN COMPRAS ON PEDIDOS.COMPRAS_ID = COMPRAS.ID
-        JOIN USUARIO ON COMPRAS.USUARIO_ID = USUARIO.ID_USUARIO
-        JOIN COMPRAS_PRODUCTOS ON COMPRAS_PRODUCTOS.COMPRA_ID = COMPRAS.ID
-        JOIN PRODUCTOS ON COMPRAS_PRODUCTOS.PRODUCTO_ID = PRODUCTOS.ID
-
-        """
+                SELECT 
+                    PEDIDOS.ID,
+                    COMPRAS.ID,
+                    COMPRAS.USUARIO_ID,
+                    USUARIO.NOMBRE,
+                    COMPRAS_PRODUCTOS.ID,
+                    PRODUCTOS.NOMBRE,
+                    COMPRAS_PRODUCTOS.CANTIDAD
+                FROM PEDIDOS
+                JOIN COMPRAS ON PEDIDOS.COMPRAS_ID = COMPRAS.ID
+                JOIN USUARIO ON COMPRAS.USUARIO_ID = USUARIO.ID_USUARIO
+                JOIN COMPRAS_PRODUCTOS ON COMPRAS_PRODUCTOS.COMPRA_ID = COMPRAS.ID
+                                    AND COMPRAS_PRODUCTOS.PRODUCTO_ID = PEDIDOS.PRODUCTO_ID
+                JOIN PRODUCTOS ON COMPRAS_PRODUCTOS.PRODUCTO_ID = PRODUCTOS.ID
+            """
         filas = usuario.pull_data_db(query).fetchall()
+        print(f"Filas obtenidas: {len(filas)}")
 
         if not filas:
             return jsonify({'error': 'No hay pedidos'}), 404
@@ -70,3 +96,178 @@ def traer_pedidos():
     except Exception as e:
         print(f"[ERROR API /admin/mostrar-pedidos]: {e}")
         return jsonify({'error': 'Error inesperado'}), 500
+    
+def traer_productos():
+    usuario_id = usuario.validar_token()
+    if not usuario_id:
+        return jsonify({'error': 'Token inválido o no proporcionado'}), 401
+
+    try:
+        query = """
+            SELECT 
+                PRODUCTOS.ID,
+                PRODUCTOS.NOMBRE,
+                PRODUCTOS.PRECIO,
+                PRODUCTOS.STOCK,
+                PRODUCTOS.DESCRIPCION,
+                PRODUCTOS.IMAGEN,
+                CATEGORIAS.ID AS CATEGORIA_ID,
+                CATEGORIAS.NOMBRE AS CATEGORIA_NOMBRE
+            FROM PRODUCTOS
+            LEFT JOIN CATEGORIAS ON PRODUCTOS.CATEGORIA_ID = CATEGORIAS.ID
+        """
+        filas = usuario.pull_data_db(query).fetchall()
+
+        if not filas:
+            return jsonify({'error': 'No hay productos cargados'}), 404
+
+        productos = []
+
+        for row in filas:
+            producto = {
+                'id': row[0],
+                'nombre': row[1],
+                'precio': row[2] if row[3] is not None else 0,
+                'stock': row[3] if row[3] is not None else 0,
+                'descripcion': row[4],
+                'imagen': row[5],  # base64 o ruta, según cómo lo guardes
+                'categoria_id': row[6],
+                'categoria_nombre': row[7]
+            }
+            productos.append(producto)
+
+        return jsonify(productos), 200
+
+    except Exception as e:
+        print(f"[ERROR API /admin/productos]: {e}")
+        return jsonify({'error': 'Error inesperado'}), 500
+
+def eliminar_producto(producto_id):
+    usuario_id = usuario.validar_token()
+    if not usuario_id:
+        return jsonify({'error': 'Token inválido'}), 401
+
+    try:
+        query = "DELETE FROM PRODUCTOS WHERE ID = :id;"
+        params = {'id': producto_id}
+
+        result = modify_data_db(query, params)  
+        if result:
+            return jsonify({'mensaje': 'Producto eliminado'}), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+    
+def crear_producto():
+    usuario_id = usuario.validar_token()
+
+    if not usuario_id:
+        return jsonify({'error': 'Token inválido'}), 401
+
+    imagen = request.files.get('imagen')
+    if not imagen or imagen.filename == '':
+        return jsonify({'error': 'No se proporcionó imagen'}), 400
+
+    filename = secure_filename(imagen.filename)
+    ext = filename.rsplit('.', 1)[-1].lower()
+    if ext not in ALLOWED_EXTENSIONS:
+        return jsonify({'error': 'Tipo de archivo no permitido'}), 400
+
+    image_b64 = base64.b64encode(imagen.read()).decode('utf-8')
+
+    try:
+        producto_data = {
+            'nombre':        request.form.get('nombre'),
+            'precio':        float(request.form.get('precio')),
+            'stock':         int(request.form.get('stock')),
+            'descripcion':   request.form.get('descripcion', ''),
+            'categoria_id':  int(request.form.get('categoria_id')),
+            'imagen':        image_b64
+        }
+    except (KeyError, ValueError) as e:
+        return jsonify({'error': f'Datos inválidos: {e}'}), 400
+
+    try:
+        query = """
+            INSERT INTO PRODUCTOS
+                (NOMBRE, PRECIO, STOCK, DESCRIPCION, CATEGORIA_ID, IMAGEN)
+            VALUES (:nombre, :precio, :stock, :descripcion, :categoria_id, :imagen)
+        """
+        result = modify_data_db(query, producto_data)
+        producto_id = result.lastrowid
+    except Exception as e:
+        print(f"[ERROR API /admin/productos/agregar]: {e}")
+        return jsonify({'error': 'Error inesperado'}), 500
+
+    return jsonify({
+        'producto_nuevo': producto_data,
+        'imagen': {
+            'nombre': filename,
+            'base64': image_b64
+        }
+    }), 201
+
+
+
+#EDITAR
+def actualizar_producto():
+    try:
+        data = request.get_json()
+        producto_id = data.get("producto_id")
+        if not producto_id:
+            return jsonify({'error': 'El ID del producto es obligatorio'}), 400
+
+        columnas_map = {
+            "nombre_producto": "NOMBRE",
+            "precio": "PRECIO",
+            "stock": "STOCK",
+            "descripcion": "DESCRIPCION",
+            "categoria_id": "CATEGORIA_ID"
+        }
+
+
+        params = {k: v for k, v in data.items() if k in columnas_map and v is not None}
+        params["producto_id"] = producto_id
+
+        if len(params) <= 1:  
+            return jsonify({'error': 'No se proporcionaron datos para actualizar'}), 400
+
+        set_clause = ", ".join([f"{columnas_map[key]} = :{key}" for key in params if key != "producto_id"])
+
+        query = f"""
+        UPDATE PRODUCTOS
+        SET {set_clause}
+        WHERE ID = :producto_id;
+        """
+
+        result = modify_data_db(query, params)
+        if result.rowcount == 0:
+            return jsonify({'error': 'El producto no existe o no se pudo actualizar'}), 404
+
+        return jsonify({'mensaje': 'Producto actualizado correctamente'}), 200
+
+    except Exception as e:
+        print(f"[ERROR API /admin/productos/actualizar_producto]: {e}")
+        return jsonify({'error': 'Error inesperado', 'detalle': str(e)}), 500
+
+    try:
+        data = request.get_json()
+        producto_id = data.get('producto_id')  # O cambia según cómo recibas el id
+
+        if not producto_id:
+            return jsonify({'error': 'El ID del producto es obligatorio'}), 400
+
+        query = "DELETE FROM PRODUCTOS WHERE ID = :producto_id;"
+        params = {'producto_id': producto_id}
+
+        result = modify_data_db(query, params)
+        if result.rowcount == 0:
+            return jsonify({'error': 'No fue posible eliminar el producto correctamente'}), 400
+
+        return jsonify({'mensaje': 'Producto eliminado correctamente'}), 200
+
+    except Exception as e:
+        print(f"[ERROR API /admin/productos/eliminar_producto]: {e}")
+        return jsonify({'error': 'Ha sucedido un error inesperado', 'detalle': str(e)}), 500
+
+    
