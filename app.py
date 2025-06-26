@@ -69,14 +69,17 @@ def carrito_producto(producto_id):
         return db.delete_carrito_producto(producto_id)
     return None
 
-
-# PEDIDOS
-@app.route('/api/pedidos', methods=['GET', 'PATCH'])
+@app.route('/api/pedidos/', methods=['GET'])
 def pedidos():
-    if request.method == 'GET':
         return db.get_all_pedidos()
-    if request.method == 'PATCH':
-        return db.finalizar_compra()
+
+@app.route('/api/finalizar_compra/<compra_id>', methods=['POST'])
+def finalizar_compra(compra_id):
+    return db.finalizar_compra(compra_id)
+
+@app.route('/api/compra/<compra_id>', methods=['GET'])
+def get_compra(compra_id):
+   return db.get_compra(compra_id)
 
 #USUARIO
 
