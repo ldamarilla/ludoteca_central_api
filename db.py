@@ -79,53 +79,13 @@ def get_productos_by_categoria(id):
     return jsonify(products), 200
 
 
-def add_producto():
-    data = request.get_json()
+def pull_data_db(query):
+    with engine.connect() as conn:
+        return conn.execute(text(query))
     
-    # Validaciones básicas
-    required_fields = ['nombre', 'precio', 'stock', 'categoria_id']
-    if not all(field in data for field in required_fields):
-        return jsonify({'error': 'Faltan campos obligatorios'}), 400
-    
-    try:
-        # Validar categoría
-        categoria_query = "SELECT ID FROM CATEGORIAS WHERE id = :categoria_id;"
-        categoria_result = pull_data_db(categoria_query, {"categoria_id": data['categoria_id']}).first()
-        
-        if not categoria_result:
-            return jsonify({'error': 'Categoría no encontrada'}), 404
-        
-        # Insertar producto
-        query = """
-            INSERT INTO PRODUCTOS 
-            (NOMBRE, PRECIO, STOCK, DESCRIPCION, CATEGORIA_ID, IMAGEN) 
-            VALUES 
-            (:nombre, :precio, :stock, :descripcion, :categoria_id, :imagen_url)
-            RETURNING ID;
-        """
-        
-        params = {
-            "nombre": data["nombre"],
-            "precio": float(data["precio"]),
-            "stock": int(data["stock"]),
-            "descripcion": data.get("descripcion", ""),
-            "categoria_id": int(data["categoria_id"]),
-        }
-        
-        result = pull_data_db(query, params).first()
-        producto_id = result[0]
-        
-        return jsonify({
-            'message': 'Producto creado correctamente',
-            'producto_id': producto_id,
-            'status': 'success'
-        }), 201
-
-    except Exception as e:
-        return jsonify({
-            'error': str(e),
-            'status': 'error'
-        }), 500
+def push_data_db(query):
+    with engine.begin() as conn:
+        return conn.execute(text(query))
 
 def update_stock_producto(id, cantidad):
     validation_producto_query = f"""SELECT ID FROM PRODUCTOS p WHERE ID ='{id}';"""

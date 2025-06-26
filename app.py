@@ -1,10 +1,15 @@
 from base64 import b64decode, b64encode
 from flask import Flask, jsonify, request
 import db, usuario, admin
+from db import pull_data_db
 import uuid
 from config import DATABASE_URI
+import os
 
 app = Flask(__name__)
+
+BASE_IMAGE_DIR = 'static/images'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 # PRODUCTOS
 
@@ -120,7 +125,55 @@ usuario.actualizar_contrasenias_no_hasheadas()
 def obtener_pedidos():
     return admin.traer_pedidos()
 
-
+@app.route('/api/admin/productos', methods=['GET', 'POST'])
+def crear_producto():
+    imagen_url = None
+    if 'imagen' in request.files:
+        imagen = request.files['imagen']
+        if imagen.filename != '':
+            file_ext = imagen.filename.rsplit('.', 1)[-1].lower()
+            if file_ext not in ALLOWED_EXTENSIONS:
+                return jsonify({'error': 'Tipo de archivo no permitido'}), 400
+            
+            # Construir ruta CON verificación
+            image_path = f"{BASE_IMAGE_DIR}/{file_ext}"
+            
+            # Prevenir directory traversal
+            if not image_path.startswith(BASE_IMAGE_DIR):
+                return jsonify({'error': 'Ruta de imagen inválida'}), 400
+            
+            try:
+                with open(image_path, 'wb') as f:
+                    f.write(imagen.read())
+                imagen_url = f"/static/images/{file_ext}"
+            except IOError as e:
+                return jsonify({'error': f"Error al guardar imagen: {str(e)}"}), 500
+            
+    producto_data = {
+        'nombre': request.form['nombre'],
+        'precio': float(request.form['precio']),
+        'stock': int(request.form['stock']),
+        'descripcion': request.form.get('descripcion', ''),
+        'categoria_id': int(request.form['categoria_id']),
+        'imagen_url': imagen_url
+            }
+    try:
+        query = """
+        INSERT INTO PRODUCTOS (NOMBRE, PRECIO, STOCK, DESCRIPCION, CATEGORIA_ID, IMAGEN) VALUES
+        (:nombre, :precio, :stock, :descipcion, :categoria_id,, :imagen_url)
+        RETURNIG ID
+        """
+        result = pull_data_db(query, producto_data).first()
+        return jsonify({
+            'status': 'success',
+            'producto_id': result[0],
+            'imagen_url': imagen_url
+        }), 201
+    except Exception as e:
+        # Limpieza en caso de error
+        if imagen_url and os.path.exists(image_path):
+            os.remove(image_path)
+        return jsonify({'error': str(e)}), 500
 
 # SERVER
 if __name__ == '__main__':
