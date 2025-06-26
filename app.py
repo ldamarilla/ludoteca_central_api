@@ -1,4 +1,5 @@
 from base64 import b64decode, b64encode
+from pathlib import Path
 from flask import Flask, jsonify, request
 import db, usuario, admin
 from db import pull_data_db
@@ -8,7 +9,8 @@ import os
 
 app = Flask(__name__)
 
-BASE_IMAGE_DIR = 'static/images'
+IMAGE_FOLDER = Path('static') / 'images'
+IMAGE_FOLDER.mkdir(parents=True, exist_ok=True)
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 # PRODUCTOS
@@ -136,18 +138,20 @@ def crear_producto():
                 return jsonify({'error': 'Tipo de archivo no permitido'}), 400
             
             # Construir ruta CON verificación
-            image_path = f"{BASE_IMAGE_DIR}/{file_ext}"
+            image_path = f"{IMAGE_FOLDER}/{imagen.filename}"
             
             # Prevenir directory traversal
-            if not image_path.startswith(BASE_IMAGE_DIR):
+            if not image_path.startswith(IMAGE_FOLDER):
                 return jsonify({'error': 'Ruta de imagen inválida'}), 400
             
             try:
-                with open(image_path, 'wb') as f:
-                    f.write(imagen.read())
-                imagen_url = f"/static/images/{file_ext}"
-            except IOError as e:
-                return jsonify({'error': f"Error al guardar imagen: {str(e)}"}), 500
+                imagen.save(image_path)
+                imagen_url = f"/static/images/{imagen.filename}"
+            except Exception as e:
+                return jsonify({
+                    'error': f"No se pudo guardar la imagen: {str(e)}",
+                    'detalle': f"Ruta intentada: {image_path}"
+                }), 500
             
     producto_data = {
         'nombre': request.form['nombre'],
