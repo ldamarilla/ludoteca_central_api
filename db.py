@@ -200,12 +200,13 @@ def add_producto_a_carrito():
        compra_params = { "fecha": datetime.now(), "usuario_id": usuario_id, "finalizada": False }
        push_data_db(add_carrito_query, compra_params)
 
+    compra_en_progreso_result = pull_data_db(compra_en_progreso_query).first()
+
     validation_producto_unique_result = (
         pull_data_db(f"""SELECT * FROM COMPRAS_PRODUCTOS cp WHERE PRODUCTO_ID ='{data['producto_id']}' AND COMPRA_ID ='{compra_en_progreso_result.ID}';""")
         .first())
     if validation_producto_unique_result: return jsonify({'error': 'Producto ya agregado al carrito'}), 422
 
-    compra_en_progreso_result = pull_data_db(compra_en_progreso_query).first()
     add_producto_query = "INSERT INTO COMPRAS_PRODUCTOS (COMPRA_ID, PRODUCTO_ID, CANTIDAD) VALUES (:compra_id, :producto_id, :cantidad);"
     prod_params = {
         "compra_id": compra_en_progreso_result.ID,
@@ -406,7 +407,8 @@ def finalizar_compra(compra_id):
         f"SELECT * FROM COMPRAS WHERE ID = '{compra_id}' AND FINALIZADA = false AND USUARIO_ID = '{usuario_id}';"
     ).first()
 
-
+    if not compra:
+        return jsonify({"success": False, "message": "Compra ya realizada anteriormente o inexistente"}), 404
     productos_compra = pull_data_db(f"""SELECT * FROM COMPRAS_PRODUCTOS WHERE COMPRA_ID = '{compra_id}';""").fetchall()
 
     for producto_compra in productos_compra:
