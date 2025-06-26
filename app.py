@@ -159,7 +159,7 @@ def crear_producto():
             }
     try:
         query = """
-        INSERT INTO PRODUCTOS (NOMBRE, PRECIO, STOCK, DESCRIPCION, CATEGORIA_ID, IMAGEN) VALUES
+        INSERT INTO `PRODUCTOS` (`NOMBRE`, `PRECIO`, `STOCK`, `DESCRIPCION`, `CATEGORIA_ID`, `IMAGEN`) VALUES
         (:nombre, :precio, :stock, :descipcion, :categoria_id,, :imagen_url)
         RETURNIG ID
         """
