@@ -219,6 +219,40 @@ def add_producto_a_carrito():
 
     except Exception as e:
         return jsonify({'error': 'Error inesperado', 'detalle': str(e)}), 500
+    
+def get_compra(compra_id):
+
+    compra_producto_query = f"""SELECT * FROM COMPRAS c 
+                                INNER JOIN COMPRAS_PRODUCTOS cp on cp.COMPRA_ID = c.ID
+                                INNER JOIN PRODUCTOS p on p.ID = cp.PRODUCTO_ID
+                                WHERE c.ID = '{compra_id}';"""
+    compra_producto_results = pull_data_db(compra_producto_query).fetchall()
+    compra_query = f"""SELECT * FROM COMPRAS WHERE ID='{compra_id}'"""
+    compra_result = pull_data_db(compra_query).first()
+
+    if not compra_result:
+        return jsonify({"success": False, "message": "Compra no encontrada"}), 404
+    
+    compra = dict()
+
+    compra["id"] = compra_result.ID
+    compra["fecha"] = compra_result.FECHA
+    compra["usuario_id"] = compra_result.USUARIO_ID
+
+    compra["compra_productos"] = list()
+
+    for compra_prod in compra_producto_results:
+        compra_producto = dict()
+        compra_producto["producto_id"] = compra_prod.PRODUCTO_ID
+        compra_producto["producto_nombre"] = compra_prod.NOMBRE
+        compra_producto["producto_precio"] = compra_prod.PRECIO
+        compra_producto["producto_stock"] = compra_prod.STOCK
+        compra_producto["producto_cantidad"] = compra_prod.CANTIDAD
+        compra_producto["producto_descripcion"] = compra_prod.DESCRIPCION
+        compra_producto["producto_imagen"] = compra_prod.IMAGEN
+        compra["compra_productos"].append(compra_producto)
+
+    return jsonify(compra)
 
 def get_carrito():
     usuario_id = usuario.validar_token()
@@ -340,24 +374,19 @@ def delete_carrito():
         return jsonify({'error': 'Error inesperado', 'detalle': str(e)}), 500
 
 # PEDIDOS
+def get_pedidos_por_usuario():
+    usuario_id=usuario.validar_token()
+    query = "SELECT p.ID, c.FECHA, pr.NOMBRE AS PRODUCTO FROM PEDIDOS p JOIN PRODUCTOS pr ON p.PRODUCTO_ID = pr.ID JOIN COMPRAS c ON p.COMPRAS_ID = c.ID WHERE p.USUARIO_ID = :usuario_id ORDER BY c.FECHA DESC"
 
-def get_all_pedidos():
-    query = """
-        SELECT p.ID, c.FECHA, pr.NOMBRE AS PRODUCTO
-        FROM PEDIDOS p JOIN PRODUCTOS pr ON p.PRODUCTO_ID = pr.ID
-        JOIN COMPRAS c ON p.COMPRAS_ID = c.ID
-        ORDER BY c.FECHA DESC"""
-    result = pull_data_db(query).mappings().all()
+    result = pull_data_db(query, {'usuario_id': usuario_id}).mappings().all()
 
     return jsonify({
         "success": True,
         "total": len(result),
         "pedidos": result
-    }), 200
+    }),200
 
-def finalizar_compra():
-    data = request.get_json()
-    compra_id = data.get("compra_id")
+def finalizar_compra(compra_id):
 
     if not compra_id:
         return jsonify({"success": False, "message": "Falta el ID de compra"}), 404
@@ -393,5 +422,5 @@ def finalizar_compra():
         push_data_db(f"""INSERT INTO PEDIDOS (PRODUCTO_ID, COMPRAS_ID)
                      VALUES ('{prod["PRODUCTO_ID"]}', '{compra_id}');""")
     
-    return jsonify({"success": True, "message": "COmpra finalizada exitosamente y productos registrados en PEDIDOS"}), 200
+    return jsonify({"success": True, "message": "Compra finalizada exitosamente y productos registrados en PEDIDOS"}), 200
 

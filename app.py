@@ -71,12 +71,24 @@ def carrito_producto(producto_id):
 
 
 # PEDIDOS
-@app.route('/api/pedidos', methods=['GET', 'PATCH'])
+@app.route('/api/pedidos', methods=['GET'])
+def pedidos_usuario():
+    return db.get_pedidos_por_usuario()
+
+@app.route('/api/pedidos', methods=['GET'])
 def pedidos():
     if request.method == 'GET':
         return db.get_all_pedidos()
+    
+@app.route('/api/compras/<compra_id>', methods=['GET'])
+def get_compra(compra_id):
+        return db.get_compra(compra_id)
+    
+@app.route('/api/compras/<compra_id>', methods=['PATCH'])
+def fin_compra(compra_id):
     if request.method == 'PATCH':
-        return db.finalizar_compra()
+        return db.finalizar_compra(compra_id)
+
 
 #USUARIO
 
